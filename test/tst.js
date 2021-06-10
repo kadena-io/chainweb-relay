@@ -10,16 +10,17 @@
 let Web3 = require("web3")
 let tst = require("./abi/tst.json");
 let config = require("../config");
+let secrets = require("../secrets");
 
 /* ************************************************************************** */
 /* Configuration */
 
 const testPublicKey = "0xDfd675b84eBe2f65658D711aa8FC4F1106792be8";
-const testPrivateKey = undefined; // see secrets.js key0
+const testPrivateKey = secrets.key0; // undefined; // see secrets.js key0
 
 // matches config.ETH_LOCKUP_ACCOUNT
-const lookupPublicKey = '0xc7eBC02Ec03d33716FB47b6702498B6C3dEBa83e'
-const lockupPrivateKey = undefined; // see secrets.js
+const lookupPublicKey = '0xc7eBC02Ec03d33716FB47b6702498B6C3dEBa83e';
+const lockupPrivateKey = secrets.lockupPrivateKey; // undefined; // see secrets.js
 
 /* ************************************************************************** */
 /* Setup Web3 */

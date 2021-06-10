@@ -1,3 +1,11 @@
+/*
+ * var t = require("./test/tst");
+ * var a = require("./index");
+ * let i = 0;
+ * let timer = setInterval(() => t.methods.transfer(t.accounts.lockup.address, 1).then(() => console.log(`transfer: ${i++}`)), 12000);
+ * var p = a.proposals();
+ */
+
 let tst = require("./tst");
 let relay = require("../index");
 
