@@ -1,5 +1,4 @@
 const pact = require("pact-lang-api");
-const chainweb = require('chainweb.js');
 const config = require("../config");
 
 /* ************************************************************************** */

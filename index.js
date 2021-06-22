@@ -2,7 +2,8 @@ const Web3 = require("web3")
 const Pact = require("pact-lang-api");
 const config = require("./config");
 const tools = require("./src/pact-tools");
-const chainweb = require("chainweb.js")
+const chainweb = require("chainweb")
+
 /* ************************************************************************** */
 /* ERC-20 contract Addresses */
 
