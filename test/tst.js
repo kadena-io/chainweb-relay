@@ -15,12 +15,12 @@ let secrets = require("../secrets");
 /* ************************************************************************** */
 /* Configuration */
 
-const testPublicKey = "0xDfd675b84eBe2f65658D711aa8FC4F1106792be8";
-const testPrivateKey = secrets.key0; // undefined; // see secrets.js key0
+const testPublicKey = config.ETH_TEST_PUBLIC_KEY;
+const testPrivateKey = config.ETH_TEST_PRIVATE_KEY;
 
-// matches config.ETH_LOCKUP_ACCOUNT
-const lookupPublicKey = '0xc7eBC02Ec03d33716FB47b6702498B6C3dEBa83e';
-const lockupPrivateKey = secrets.lockupPrivateKey; // undefined; // see secrets.js
+//Lockup Account
+const lockupPublicKey = config.ETH_LOCKUP_PUBLIC_KEY;
+const lockupPrivateKey = config.ETH_LOCKUP_PRIVATE_KEY;
 
 /* ************************************************************************** */
 /* Setup Web3 */
@@ -104,4 +104,3 @@ module.exports = {
     lockup: lockupAccount,
   }
 };
-

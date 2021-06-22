@@ -1,4 +1,5 @@
 const pact = require("pact-lang-api");
+const chainweb = require('chainweb.js');
 const config = require("../config");
 
 /* ************************************************************************** */
@@ -53,13 +54,37 @@ const callPact = async (cmd, local) => {
 }
 
 const awaitTx = async (reqKey) => {
-  const resp = await pact.fetch.listen({ listen: reqKey }, config.PACT_URL);
-  return pactResult(resp);
+  const resp = await poll({ requestKeys: [reqKey] }, config.PACT_URL);
+  return pactResult(resp[reqKey]);
 }
 
 const pollTxs = async (reqKeys) => {
   const resp = await pact.fetch.poll(reqKeys, config.PACT_URL);
   return objMap(resp, v => pactResult(v));
+}
+
+async function poll(reqKey, apiHost, maxCount=300) {
+  let repeat = true;
+  let count = 0;
+  while (repeat) {
+    const result = await pact.fetch.poll(reqKey, apiHost)
+    if (result[reqKey.requestKeys[0]]) {
+      return result;
+    }
+    await wait();
+    count++;
+    if (count > maxCount) {
+      repeat = false;
+      return result;
+    }
+  }
+  return 'Server unresponsive'
+}
+
+async function wait(ms = 1000) {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
 }
 
 /* ************************************************************************** */
@@ -77,7 +102,7 @@ const pollTxs = async (reqKeys) => {
  *
  */
 const mkCmd = (keyPair, sender) => {
-  if (typeof keyPair === 'undefined') {
+  if (!keyPair) {
     keyPair = pact.crypto.genKeyPair();
   }
   return {
@@ -196,13 +221,79 @@ const relayPropose = async (keyPair, bond, proposal, local) => {
     relayGasCap().cap,
     relayBondCap(bond).cap,
   ]
-  cmd.pactCode = `(${config.PACT_MODULE}.propose (read-msg 'header) (read-msg 'bond))`,
-  console.log("call pact:", cmd.pactCode);
-  console.log("envData", cmd.envData);
-  console.log("caps", cmd.keyPairs[0].clist);
+  cmd.pactCode = `(${config.PACT_MODULE}.propose (read-msg 'header) (read-msg 'bond))`;
+  // console.log("call pact:", cmd.pactCode);
+  // console.log("envData", cmd.envData.header);
+  // console.log("caps", cmd.keyPairs[0].clist);
   return await callPact(cmd, local);
 }
 
+/**
+ * Endorse a header to the relay.
+ *
+ * TODO:
+ * what capabilities are required? Is it possible to use a gas station?
+ */
+const relayCheckBond = async (keyPair, bond, local) => {
+  const cmd = mkCmd(keyPair, RELAY_GAS_STATION_ACCOUNT);
+  cmd.envData = {
+    bond: bond
+  }
+  cmd.pactCode = `(enforce-guard
+                    (at 'guard
+                      (${config.PACT_POOL_MODULE}.get-active-bond (read-msg 'bond))))`;
+  return await callPact(cmd, local);
+}
+
+
+/**
+ * Endorse a header to the relay.
+ *
+ * TODO:
+ * what capabilities are required? Is it possible to use a gas station?
+ */
+const relayEndorse = async (keyPair, bond, proposal, local) => {
+  const cmd = mkCmd(keyPair, RELAY_GAS_STATION_ACCOUNT);
+  cmd.envData = {
+    header: {
+      hash: proposal.hash,
+      number: {int: proposal.number},
+      'receipts-root': proposal['receipts-root']
+    },
+    bond: bond,
+  };
+  cmd.keyPairs[0].clist = [
+    relayGasCap().cap,
+    relayBondCap(bond).cap,
+  ]
+  cmd.pactCode = `(${config.PACT_MODULE}.endorse (read-msg 'header) (read-msg 'bond))`
+  // console.log("call pact:", cmd.pactCode);
+  // console.log("envData", cmd.envData.header);
+  // console.log("caps", cmd.keyPairs[0].clist);
+  return await callPact(cmd, local);
+}
+
+
+const relayValidate = async (keyPair, proposal, local) => {
+  const cmd = mkCmd(keyPair, RELAY_GAS_STATION_ACCOUNT);
+  cmd.envData = {
+    header: {
+      hash: proposal.hash,
+      number: {int: proposal.number},
+      'receipts-root': proposal['receipts-root']
+    },
+  };
+  cmd.pactCode = `(${config.PACT_MODULE}.validate (read-msg 'header))`;
+
+  try {
+    const resp = await pact.fetch.local(cmd, config.PACT_URL);
+    return resp;
+  } catch(e){
+    console.log(e)
+  }
+}
+
+//CONFIRMATION DEPTH
 /* ************************************************************************** */
 
 module.exports = {
@@ -214,7 +305,10 @@ module.exports = {
   },
   relay: {
     propose: relayPropose,
+    endorse: relayEndorse,
+    validate: relayValidate,
     newBond: relayNewBond,
+    checkBond: relayCheckBond
   },
   capabilities: {
     gas: gasCap,
@@ -222,6 +316,5 @@ module.exports = {
     relayBond: relayBondCap,
     transfer: transferCap,
     relayGas: relayGasCap,
-  },
+  }
 };
-

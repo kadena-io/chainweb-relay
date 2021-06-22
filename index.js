@@ -2,7 +2,7 @@ const Web3 = require("web3")
 const Pact = require("pact-lang-api");
 const config = require("./config");
 const tools = require("./src/pact-tools");
-
+const chainweb = require("chainweb.js")
 /* ************************************************************************** */
 /* ERC-20 contract Addresses */
 
@@ -14,7 +14,7 @@ const tstContractAddr = '0x722dd3f80bac40c951b51bdd28dd19d435762180';
 /* Initialize Pact API Provider */
 
 const bonder = {
-  keyPair: Pact.crypto.restoreKeyPairFromSecretKey(config.PACT_KEY),
+  keyPair: config.PACT_PRIVATE_KEY.length===64 ? Pact.crypto.restoreKeyPairFromSecretKey(config.PACT_PRIVATE_KEY): undefined,
   name: config.BOND_NAME,
 }
 
@@ -148,6 +148,7 @@ async function eventToProposal (e) {
 }
 
 const proposals = () => {
+  console.log("Starting propose...")
   let current = null;
   const events = lockupEvents();
   events.on('data', d => {
@@ -159,22 +160,23 @@ const proposals = () => {
       current = d.blockNumber;
       s = delay(d.blockHash);
       console.log(`wait ${s}s on ${d.blockNumber} - ${d.blockHash}`);
-      setTimeout(() => eventToProposal(d).then(p => submit(p)), s * 1000);
+      setTimeout(() => eventToProposal(d).then(p => submitPropose(p)), s * 1000);
     }
   });
   return events;
 }
 
+
 // We could be more fancy and listen to propose events on the
 // Kadena side and drop the proposal if it is already submitted.
 //
-const submit = async (proposal) => {
+const submitPropose = async (proposal) => {
   // check that proposal hasn't been submitted yet
   const exists = await tools.relay.propose(bonder.keyPair, config.BOND_NAME, proposal)
     .then(r => false)
     .catch((e) => {
       // TODO: distinguish between exiting and other failures:
-      console.log(`failed on local: ${proposal.number} - ${proposal.hash}: ${JSON.stringify(e)}`);
+      console.log(`failed on local: ${proposal.number} - ${proposal.hash}: ${JSON.stringify(e.result.error)}`);
       return true;
     });
   if (!exists) {
@@ -184,15 +186,84 @@ const submit = async (proposal) => {
       console.log(`got request keys for ${proposal.number} - ${proposal.hash}: ${reqKeys}`);
       try {
         const result = await tools.awaitTx(reqKeys[0]);
-        console.log(`done proposing ${proposal.number} - ${proposal.hash}: ${e}`);
+        console.log(`done proposing ${proposal.number} - ${proposal.hash}: ${result}`);
       } catch (e) {
-        console.log(`failed to propose ${proposal.number} - ${proposal.hash}: ${JSON.stringify(e)}`);
+        console.log(`failed to propose ${proposal.number} - ${proposal.hash}: ${JSON.stringify(e.result.error)}`);
       }
     } catch (e) {
       console.log(`failed on send: ${proposal.number} - ${proposal.hash}: ${JSON.stringify(e)}`);
     }
   } else {
     console.log(`skip existing ${proposal.number} - ${proposal.hash}`);
+  }
+}
+
+/* ************************************************************************** */
+/* Endorsement */
+
+
+const endorsement = async () => {
+  console.log("Starting endorse...")
+  //Check recentEvents
+  let recentEvents = await chainweb.event.recent(config.PACT_CHAIN_ID, config.PACT_CONFIRM_DEPTH, config.PACT_RECENT_BLOCKS, config.PACT_NETWORK_ID, `https://${config.PACT_SERVER}`);
+  let filteredEvents = recentEvents.filter(e => e.name === "PROPOSE" && e.params[3].includes(bonder.name));
+  console.log(`Chainweb Events to endorse in the last ${config.PACT_RECENT_BLOCKS} blocks`, filteredEvents.map(e => e.params[1]))
+  filteredEvents.forEach(async e => {
+    let blockHeader = await eventToProposal({blockNumber: e.params[0].int, blockHash:e.params[1]})
+    //Check if endorses include the bonder
+    if (e.params[3].includes(bonder.name)) {
+      submitEndorse(blockHeader);
+    }
+  })
+  //Listens to event stream
+  chainweb.event.stream(config.PACT_CONFIRM_DEPTH, [config.PACT_CHAIN_ID], async e => {
+   if (e.name === "PROPOSE" && e.params[3].includes(bonder.name)){
+     console.log("Chainweb propose event received:", e.params[1])
+     //Fetch block header
+     let blockHeader = await eventToProposal({blockNumber: e.params[0].int, blockHash:e.params[1]})
+     submitEndorse(blockHeader);
+   }
+ }, config.PACT_NETWORK_ID, `https://${config.PACT_SERVER}`)
+}
+
+const submitEndorse = async (proposal) => {
+  // check that proposal hasn't been validated yet
+  const validated = await tools.relay.validate(bonder.keyPair, proposal, true);
+  if (validated.result.status === "failure"){
+    const exists = await tools.relay.endorse(bonder.keyPair, config.BOND_NAME, proposal)
+      .then(r => false)
+      .catch((e) => {
+        // TODO: distinguish between exiting and other failures:
+        console.log(`failed on local: ${proposal.number} - ${proposal.hash}: ${JSON.stringify(e.result.error.message)}`);
+        return true;
+      });
+    if (!exists){
+      console.log(`endorse ${proposal.number} - ${proposal.hash}`);
+      try {
+        const reqKeys = await tools.relay.endorse(bonder.keyPair, bonder.name, proposal, false);
+        console.log(`got request keys for ${proposal.number} - ${proposal.hash}: ${reqKeys}`);
+        try {
+          const result = await tools.awaitTx(reqKeys[0]);
+          console.log(`done endorsing ${proposal.number} - ${proposal.hash}: ${JSON.stringify(result)}`);
+        } catch (e) {
+          console.log(`failed to endorse ${proposal.number} - ${proposal.hash}: ${JSON.stringify(e.result.error)}`);
+        }
+      } catch (e) {
+        console.log(`failed on send: ${proposal.number} - ${proposal.hash}: ${JSON.stringify(e)}`);
+      }
+    }
+  } else {
+    console.log(`skip existing ${proposal.number} - ${proposal.hash}`);
+  }
+}
+
+
+const checkBond = async () => {
+  try {
+    let a = await tools.relay.checkBond(bonder.keyPair, bonder.name);
+    return a
+  } catch(e){
+    throw e
   }
 }
 
@@ -237,12 +308,13 @@ let delay = (blockHash) => {
 /* Module export */
 
 module.exports = {
+  tools: tools,
   proposals: proposals,
-
+  endorsement: endorsement,
+  checkBond: checkBond,
   // internal, for testing
   delay: delay,
   lockupEvents: lockupEvents,
   eventToProposal: eventToProposal,
   contract: contract,
 };
-
