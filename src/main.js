@@ -1,4 +1,9 @@
 var a = require("./relay");
+var process = require('process')
+
+process.on('SIGINT', () => {
+  process.exit(0)
+});
 
 const main = async () => {
   try {
