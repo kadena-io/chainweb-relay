@@ -1,7 +1,7 @@
 const Web3 = require("web3")
 const Pact = require("pact-lang-api");
-const config = require("./config");
-const tools = require("./src/pact-tools");
+const config = require("../config");
+const tools = require("./pact-tools");
 const chainweb = require("chainweb")
 
 /* ************************************************************************** */
@@ -167,7 +167,6 @@ const proposals = () => {
   return events;
 }
 
-
 // We could be more fancy and listen to propose events on the
 // Kadena side and drop the proposal if it is already submitted.
 //
@@ -201,7 +200,6 @@ const submitPropose = async (proposal) => {
 
 /* ************************************************************************** */
 /* Endorsement */
-
 
 const endorsement = async () => {
   console.log("Starting endorse...")
@@ -257,7 +255,6 @@ const submitEndorse = async (proposal) => {
     console.log(`skip existing ${proposal.number} - ${proposal.hash}`);
   }
 }
-
 
 const checkBond = async () => {
   try {
@@ -319,3 +316,4 @@ module.exports = {
   eventToProposal: eventToProposal,
   contract: contract,
 };
+

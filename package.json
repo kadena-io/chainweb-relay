@@ -2,9 +2,9 @@
   "name": "chainweb-relay",
   "version": "1.0.0",
   "description": "Chainweb Relay Service",
-  "main": "index.js",
+  "main": "src/main.js",
   "scripts": {
-    "start": "node test/main.js",
+    "start": "node src/main.js",
     "start:tx": "node test/transaction.js"
   },
   "author": "",

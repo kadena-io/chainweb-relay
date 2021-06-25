@@ -1,5 +1,4 @@
-var a = require("../index");
-
+var a = require("./relay");
 
 const main = async () => {
   try {
