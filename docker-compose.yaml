@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+
+  relay-0:
+    container_name: relay-0
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: relay-app
+    restart: unless-stopped
+    environment:
+    - BOND_NAME
+    - PACT_PRIVATE_KEY
+    - INFURA_API_TOKEN
+
+  relay-1:
+    container_name: relay-1
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: relay-app
+    restart: unless-stopped
+    environment:
+    - BOND_NAME
+    - PACT_PRIVATE_KEY
+    - INFURA_API_TOKEN
+
+  lockup:
+    container_name: lockup
+    build:
+      context: .
+      dockerfile: test/Dockerfile
+    image: relay-test-lockup
+    restart: unless-stopped
+    environment:
+    - INFURA_API_TOKEN
+    - ETH_TEST_PRIVATE_KEY
