@@ -95,7 +95,6 @@ pactDevnet = {
   BOND_NAME: 'TestBonder:0',
   PACT_NETWORK_ID: 'development',
   PACT_SERVER: 'localhost:8080',
-  PACT_URL: undefined, // Not required if PACT_NETWORK_ID and PACT_SERVER or provided
   PACT_CHAIN_ID: "0",
   PACT_MODULE: "relay.relay",
   PACT_POOL_MODULE: "relay.pool",
@@ -114,7 +113,6 @@ pactTestnet = {
   BOND_NAME: undefined,
   PACT_NETWORK_ID: 'testnet04',
   PACT_SERVER: 'api.testnet.chainweb.com',
-  PACT_URL: undefined, // Not required if PACT_NETWORK_ID and PACT_SERVER or provided
   PACT_CHAIN_ID: "0",
   PACT_MODULE: "relay.relay",
   PACT_POOL_MODULE: "relay.pool",
@@ -133,7 +131,6 @@ pactMainnet = {
   PACT_PRIVATE_KEY: undefined,
   PACT_NETWORK_ID: 'mainnet01',
   PACT_SERVER: 'api.chainweb.com',
-  PACT_URL: undefined, // Not required if PACT_NETWORK_ID and PACT_SERVER or provided
   PACT_CHAIN_ID: undefined,
   PACT_MODULE: undefined,
   PACT_POOL_MODULE: undefined,

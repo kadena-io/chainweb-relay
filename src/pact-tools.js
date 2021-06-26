@@ -11,8 +11,7 @@ const objMap = (obj, f) =>
 /* Pact Utils */
 
 /* Creation time for a transaction */
-// const creationTime = () => Math.round((new Date).getTime()/1000)-15
-const creationTime = () => Math.round((new Date).getTime()/1000)-30
+const creationTime = () => Math.round((new Date).getTime()/1000)-180
 
 const meta = (sender) => pact.lang.mkMeta(
   sender ?? "",
@@ -47,7 +46,7 @@ const callPact = async (cmd, local) => {
     return pactResult(resp);
   } else {
     const resp = await pact.fetch.send(cmd, config.PACT_URL);
-    console.log(`pact send resp: ${JSON.stringify(resp)}`);
+    // console.log(`pact send resp: ${JSON.stringify(resp)}`);
     const reqKeys = resp.requestKeys;
     if (reqKeys) {
       return reqKeys;
@@ -209,8 +208,7 @@ const relayNewBond = async (keyPair, account, amount, local) => {
  * Propose a header to the relay.
  */
 const relayPropose = async (keyPair, bond, proposal, local) => {
-  const cmd = mkCmd(keyPair, RELAY_GAS_STATION_ACCOUNT);
-  // const cmd = mkCmd(keyPair, keyPair.publicKey);
+  const cmd = mkCmd(keyPair, keyPair.publicKey);
   cmd.envData = {
     header: {
       hash: proposal.hash,
@@ -220,8 +218,7 @@ const relayPropose = async (keyPair, bond, proposal, local) => {
     bond: bond,
   };
   cmd.keyPairs[0].clist = [
-    relayGasCap().cap,
-    // gasCap().cap,
+    gasCap().cap,
     relayBondCap(bond).cap,
   ]
   cmd.pactCode = `(${config.PACT_MODULE}.propose (read-msg 'header) (read-msg 'bond))`;
@@ -230,7 +227,6 @@ const relayPropose = async (keyPair, bond, proposal, local) => {
   // console.log("envData.bond", cmd.envData.bond);
   // console.log("caps", cmd.keyPairs[0].clist);
   // console.log("meta", cmd.meta);
-  // console.log("keyPairs", cmd.keyPairs);
   return await callPact(cmd, local);
 }
 

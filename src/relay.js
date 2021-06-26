@@ -182,7 +182,7 @@ const submitPropose = async (proposal) => {
     console.log(`propose ${proposal.number} - ${proposal.hash}`);
     try {
       const reqKeys = await tools.relay.propose(bonder.keyPair, config.BOND_NAME, proposal, false);
-      console.log(`got request keys for ${proposal.number} - ${proposal.hash}: ${reqKeys}`);
+      // console.log(`got request keys for ${proposal.number} - ${proposal.hash}: ${reqKeys}`);
       try {
         const result = await tools.awaitTx(reqKeys[0]);
         console.log(`done proposing ${proposal.number} - ${proposal.hash}: ${result}`);
@@ -217,8 +217,8 @@ const endorsement = async () => {
 
   // Listens to event stream
   chainweb.event.stream(config.PACT_CONFIRM_DEPTH, [config.PACT_CHAIN_ID], async e => {
-    console.log("Got chainweb event:", e);
     if (e.name === "PROPOSE" && e.params[3].includes(bonder.name)) {
+      // console.log("Got PROPOSE event:", e);
       processEndorseEvent(e);
     }
   }, config.PACT_NETWORK_ID, `https://${config.PACT_SERVER}`)
@@ -245,7 +245,7 @@ const submitEndorse = async (proposal) => {
       console.log(`endorse ${proposal.number} - ${proposal.hash}`);
       try {
         const reqKeys = await tools.relay.endorse(bonder.keyPair, bonder.name, proposal, false);
-        console.log(`got request keys for ${proposal.number} - ${proposal.hash}: ${reqKeys}`);
+        // console.log(`got request keys for ${proposal.number} - ${proposal.hash}: ${reqKeys}`);
         try {
           const result = await tools.awaitTx(reqKeys[0]);
           console.log(`done endorsing ${proposal.number} - ${proposal.hash}: ${JSON.stringify(result)}`);
