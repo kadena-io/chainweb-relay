@@ -9,7 +9,6 @@ const chainweb = require("chainweb")
 
 const usdtMainnet = '0xdac17f958d2ee523a2206206994597c13d831ec7';
 const usdtRopsten = '0x6ee856ae55b6e1a249f04cd3b947141bc146273c';
-const tstContractAddr = '0x722dd3f80bac40c951b51bdd28dd19d435762180';
 
 /* ************************************************************************** */
 /* Initialize Pact API Provider */
@@ -98,13 +97,13 @@ const contract = new web3.eth.Contract(erc20TransferABI, config.ETH_CONTRACT_ADD
 
 // For debugging
 function lockupEventsOnce (cb) {
-  contract.once('Transfer', { filter: { "_to" : config.ETH_LOCKUP_ADDR } }, cb);
+  contract.once('Transfer', { filter: { "_to" : config.ETH_LOCKUP_PUBLIC_KEY } }, cb);
 }
 
 /* Lockup Events Emitter for a contract and a lockup accont
  */
 const lockupEvents = () =>
-  contract.events.Transfer({filter: {"_to": config.ETH_LOCKUP_ADDR}});
+  contract.events.Transfer({filter: {"_to": config.ETH_LOCKUP_PUBLIC_KEY}});
 
 /* Await a given block a given height
  *
@@ -203,26 +202,32 @@ const submitPropose = async (proposal) => {
 
 const endorsement = async () => {
   console.log("Starting endorse...")
-  //Check recentEvents
-  let recentEvents = await chainweb.event.recent(config.PACT_CHAIN_ID, config.PACT_CONFIRM_DEPTH, config.PACT_RECENT_BLOCKS, config.PACT_NETWORK_ID, `https://${config.PACT_SERVER}`);
+
+  // Check recentEvents
+  let recentEvents = await chainweb.event.recent(
+      config.PACT_CHAIN_ID,
+      config.PACT_CONFIRM_DEPTH,
+      config.PACT_RECENT_BLOCKS,
+      config.PACT_NETWORK_ID,
+      `https://${config.PACT_SERVER}`
+  );
   let filteredEvents = recentEvents.filter(e => e.name === "PROPOSE" && e.params[3].includes(bonder.name));
   console.log(`Chainweb Events to endorse in the last ${config.PACT_RECENT_BLOCKS} blocks`, filteredEvents.map(e => e.params[1]))
-  filteredEvents.forEach(async e => {
-    let blockHeader = await eventToProposal({blockNumber: e.params[0].int, blockHash:e.params[1]})
-    //Check if endorses include the bonder
-    if (e.params[3].includes(bonder.name)) {
-      submitEndorse(blockHeader);
-    }
-  })
-  //Listens to event stream
+  filteredEvents.forEach(async e => processEndorseEvent(e))
+
+  // Listens to event stream
   chainweb.event.stream(config.PACT_CONFIRM_DEPTH, [config.PACT_CHAIN_ID], async e => {
-   if (e.name === "PROPOSE" && e.params[3].includes(bonder.name)){
-     console.log("Chainweb propose event received:", e.params[1])
-     //Fetch block header
-     let blockHeader = await eventToProposal({blockNumber: e.params[0].int, blockHash:e.params[1]})
-     submitEndorse(blockHeader);
-   }
- }, config.PACT_NETWORK_ID, `https://${config.PACT_SERVER}`)
+    console.log("Got chainweb event:", e);
+    if (e.name === "PROPOSE" && e.params[3].includes(bonder.name)) {
+      processEndorseEvent(e);
+    }
+  }, config.PACT_NETWORK_ID, `https://${config.PACT_SERVER}`)
+}
+
+const processEndorseEvent = async (e) => {
+  console.log("Chainweb propose event:", e.params[1])
+  let blockHeader = await eventToProposal({blockNumber: e.params[0].int, blockHash: e.params[1]})
+  submitEndorse(blockHeader);
 }
 
 const submitEndorse = async (proposal) => {
@@ -310,6 +315,7 @@ module.exports = {
   proposals: proposals,
   endorsement: endorsement,
   checkBond: checkBond,
+  bonder: bonder,
   // internal, for testing
   delay: delay,
   lockupEvents: lockupEvents,

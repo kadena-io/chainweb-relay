@@ -10,16 +10,16 @@
 let Web3 = require("web3")
 let tst = require("./abi/tst.json");
 let config = require("../config");
-let secrets = require("../secrets");
 
 /* ************************************************************************** */
 /* Configuration */
 
-const testPublicKey = config.ETH_TEST_PUBLIC_KEY;
+// Account that transfers into the lookup account
+// only needed for testing lockups
 const testPrivateKey = config.ETH_TEST_PRIVATE_KEY;
 
-//Lockup Account
-const lockupPublicKey = config.ETH_LOCKUP_PUBLIC_KEY;
+// Lockup Account (used in transaction.js as lookup address)
+// only needed for debugging and development
 const lockupPrivateKey = config.ETH_LOCKUP_PRIVATE_KEY;
 
 /* ************************************************************************** */
@@ -31,13 +31,16 @@ web3.eth.Contract.setProvider(config.ETH_URL);
 /* ************************************************************************** */
 /* Create Accounts */
 
+const lockupAccount = lockupPrivateKey ? web3.eth.accounts.privateKeyToAccount(lockupPrivateKey) : undefined;
+if (lockupAccount) {
+  web3.eth.accounts.wallet.add(lockupAccount);
+}
+
 const testAccount = web3.eth.accounts.privateKeyToAccount(testPrivateKey);
-const lockupAccount = web3.eth.accounts.privateKeyToAccount(lockupPrivateKey);
 
 // add accounts to wallet
 web3.eth.accounts.wallet.create(0, web3.utils.randomHex(32));
 web3.eth.accounts.wallet.add(testAccount);
-web3.eth.accounts.wallet.add(lockupAccount);
 
 // set default account
 web3.eth.defaultAccount = testAccount.address;

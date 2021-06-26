@@ -4,10 +4,40 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 /* ************************************************************************** */
+/* README
+ *
+ * Default environment:
+ *
+ * - DEFAULT_ENV (production|ropsten|kovan, default: kovan)
+ *
+ * Required settings for relay-app:
+ *
+ * - BOND_NAME
+ * - PACT_PRIVATE_KEY
+ * - INFURA_API_TOKEN: undefined,
+ *
+ * Required settings for testing with lockup transfers
+ *
+ * - ETH_TEST_PRIVATE_KEY
+ * - INFURA_API_TOKEN
+ *
+ * Usually set via default environment:
+ *
+ * - ETH_NETWORK_ID
+ * - ETH_CONTRACT_ADDR
+ * - ETH_LOCKUP_PUBLIC_KEY
+ *
+ * All other settings are mainly for debugging and testing purposes
+ *
+ */
+
+/* ************************************************************************** */
 /* Some ERC-20 contract Addresses */
 
 const usdtMainnet = '0xdac17f958d2ee523a2206206994597c13d831ec7';
 const usdtRopsten = '0x6ee856ae55b6e1a249f04cd3b947141bc146273c';
+const tstKovan = '0x5679f3797da4073298284fc47c95b98a74e7eba7';
+const tstRopsten = '0x722dd3f80bac40c951b51bdd28dd19d435762180';
 
 /* ************************************************************************** */
 /* Default Eth Configurations */
@@ -19,11 +49,11 @@ const ethKovan = {
 
   /* ERC-20 Token Settings */
   ETH_NETWORK_ID: "kovan",
-  ETH_CONTRACT_ADDR: "0x5679f3797da4073298284fc47c95b98a74e7eba7",
+  ETH_CONTRACT_ADDR: tstKovan,
   ETH_URL: undefined,
   ETH_TEST_PUBLIC_KEY: undefined,
   ETH_TEST_PRIVATE_KEY: undefined,
-  ETH_LOCKUP_PUBLIC_KEY: undefined,
+  ETH_LOCKUP_PUBLIC_KEY: '0xc7eBC02Ec03d33716FB47b6702498B6C3dEBa83e',
   ETH_LOCKUP_PRIVATE_KEY: undefined,
 }
 
@@ -34,7 +64,7 @@ const ethRopsten = {
 
   /* ERC-20 Token Settings */
   ETH_NETWORK_ID: "ropsten",
-  ETH_CONTRACT_ADDR: "0x722dd3f80bac40c951b51bdd28dd19d435762180",
+  ETH_CONTRACT_ADDR: tstRopsten,
   ETH_URL: undefined,
   ETH_TEST_PUBLIC_KEY: undefined,
   ETH_TEST_PRIVATE_KEY: undefined,
@@ -114,7 +144,7 @@ pactMainnet = {
   PACT_HIGH_GAS_LIMIT: 60000,
   PACT_HIGH_GAS_PRICE: 0.00000001,
   PACT_RECENT_BLOCKS: 30,
-  PACT_CONFIRM_DEPTH: 1
+  PACT_CONFIRM_DEPTH: 4
 }
 
 /* ************************************************************************** */
@@ -130,7 +160,28 @@ const kovanConfig = {
   ... pactTestnet,
 };
 
+// TODO: fill in default values above
+const prodConfig = {
+  ... ethMainnet,
+  ... pactMainnet,
+};
+
 let defaultConfig = kovanConfig;
+
+switch (process.env.DEFAULT_ENV) {
+  case "kovan":
+    defaultConfig = kovanConfig;
+    break;
+  case "ropsten":
+    defaultConfig = ropstenConfig;
+    break;
+  case "production":
+    defaultConfig = prodConfig;
+    break;
+  default:
+    defaultConfig = kovanConfig;
+    break;
+}
 
 /* ************************************************************************** */
 /* Evaluate Configuration */
