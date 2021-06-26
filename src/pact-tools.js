@@ -11,7 +11,8 @@ const objMap = (obj, f) =>
 /* Pact Utils */
 
 /* Creation time for a transaction */
-const creationTime = () => Math.round((new Date).getTime()/1000)-15
+// const creationTime = () => Math.round((new Date).getTime()/1000)-15
+const creationTime = () => Math.round((new Date).getTime()/1000)-30
 
 const meta = (sender) => pact.lang.mkMeta(
   sender ?? "",
@@ -48,7 +49,11 @@ const callPact = async (cmd, local) => {
     const resp = await pact.fetch.send(cmd, config.PACT_URL);
     console.log(`pact send resp: ${JSON.stringify(resp)}`);
     const reqKeys = resp.requestKeys;
-    return reqKeys;
+    if (reqKeys) {
+      return reqKeys;
+    } else {
+      throw resp;
+    }
   }
 }
 
@@ -62,7 +67,7 @@ const pollTxs = async (reqKeys) => {
   return objMap(resp, v => pactResult(v));
 }
 
-async function poll(reqKey, apiHost, maxCount=300) {
+const poll = async (reqKey, apiHost, maxCount=300) => {
   let repeat = true;
   let count = 0;
   while (repeat) {
@@ -202,12 +207,10 @@ const relayNewBond = async (keyPair, account, amount, local) => {
 
 /**
  * Propose a header to the relay.
- *
- * TODO:
- * what capabilities are required? Is it possible to use a gas station?
  */
 const relayPropose = async (keyPair, bond, proposal, local) => {
   const cmd = mkCmd(keyPair, RELAY_GAS_STATION_ACCOUNT);
+  // const cmd = mkCmd(keyPair, keyPair.publicKey);
   cmd.envData = {
     header: {
       hash: proposal.hash,
@@ -218,20 +221,21 @@ const relayPropose = async (keyPair, bond, proposal, local) => {
   };
   cmd.keyPairs[0].clist = [
     relayGasCap().cap,
+    // gasCap().cap,
     relayBondCap(bond).cap,
   ]
   cmd.pactCode = `(${config.PACT_MODULE}.propose (read-msg 'header) (read-msg 'bond))`;
   // console.log("call pact:", cmd.pactCode);
-  // console.log("envData", cmd.envData.header);
+  // console.log("envData.header", cmd.envData.header);
+  // console.log("envData.bond", cmd.envData.bond);
   // console.log("caps", cmd.keyPairs[0].clist);
+  // console.log("meta", cmd.meta);
+  // console.log("keyPairs", cmd.keyPairs);
   return await callPact(cmd, local);
 }
 
 /**
  * Endorse a header to the relay.
- *
- * TODO:
- * what capabilities are required? Is it possible to use a gas station?
  */
 const relayCheckBond = async (keyPair, bond, local) => {
   const cmd = mkCmd(keyPair, RELAY_GAS_STATION_ACCOUNT);
@@ -247,9 +251,6 @@ const relayCheckBond = async (keyPair, bond, local) => {
 
 /**
  * Endorse a header to the relay.
- *
- * TODO:
- * what capabilities are required? Is it possible to use a gas station?
  */
 const relayEndorse = async (keyPair, bond, proposal, local) => {
   const cmd = mkCmd(keyPair, RELAY_GAS_STATION_ACCOUNT);

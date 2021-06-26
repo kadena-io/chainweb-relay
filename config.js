@@ -100,7 +100,7 @@ pactDevnet = {
   PACT_MODULE: "relay.relay",
   PACT_POOL_MODULE: "relay.pool",
   PACT_RELAY_GAS_STATION: "relay.gas-station",
-  PACT_TTL: 28800,
+  PACT_TTL: 1200,
   PACT_GAS_PRICE: 0.000000000001,
   PACT_GAS_LIMIT: 10000,
   PACT_HIGH_GAS_LIMIT: 60000,
@@ -110,8 +110,8 @@ pactDevnet = {
 }
 
 pactTestnet = {
-  PACT_PRIVATE_KEY: undefined, // see secrets.js
-  BOND_NAME: '',
+  PACT_PRIVATE_KEY: undefined,
+  BOND_NAME: undefined,
   PACT_NETWORK_ID: 'testnet04',
   PACT_SERVER: 'api.testnet.chainweb.com',
   PACT_URL: undefined, // Not required if PACT_NETWORK_ID and PACT_SERVER or provided
@@ -119,7 +119,7 @@ pactTestnet = {
   PACT_MODULE: "relay.relay",
   PACT_POOL_MODULE: "relay.pool",
   PACT_RELAY_GAS_STATION: "relay.gas-station",
-  PACT_TTL: 28800,
+  PACT_TTL: 1200,
   PACT_GAS_PRICE: 0.000000000001,
   PACT_GAS_LIMIT: 10000,
   PACT_HIGH_GAS_LIMIT: 60000,
@@ -138,7 +138,7 @@ pactMainnet = {
   PACT_MODULE: undefined,
   PACT_POOL_MODULE: undefined,
   PACT_RELAY_GAS_STATION: undefined,
-  PACT_TTL: 28800,
+  PACT_TTL: 1200,
   PACT_GAS_PRICE: 0.000000000001,
   PACT_GAS_LIMIT: 10000,
   PACT_HIGH_GAS_LIMIT: 60000,
@@ -191,9 +191,9 @@ switch (process.env.DEFAULT_ENV) {
 let config = {};
 
 /* Secrets and User Settings */
-config.INFURA_API_TOKEN = process.env.INFURA_API_TOKEN || ""
+config.INFURA_API_TOKEN = process.env.INFURA_API_TOKEN || defaultConfig.INFURA_API_TOKEN;
 config.BOND_NAME = process.env.BOND_NAME || defaultConfig.BOND_NAME;
-config.PACT_PRIVATE_KEY = process.env.PACT_PRIVATE_KEY || ""
+config.PACT_PRIVATE_KEY = process.env.PACT_PRIVATE_KEY || defaultConfig.PACT_PRIVATE_KEY;
 
 /* ERC-20 Token Settings */
 config.ETH_NETWORK_ID = process.env.ETH_NETWORK_ID || defaultConfig.ETH_NETWORK_ID;
@@ -202,7 +202,6 @@ config.ETH_TEST_PUBLIC_KEY = process.env.ETH_TEST_PUBLIC_KEY || defaultConfig.ET
 config.ETH_TEST_PRIVATE_KEY = process.env.ETH_TEST_PRIVATE_KEY || defaultConfig.ETH_TEST_PRIVATE_KEY;
 config.ETH_LOCKUP_PUBLIC_KEY = process.env.ETH_LOCKUP_PUBLIC_KEY || defaultConfig.ETH_LOCKUP_PUBLIC_KEY;
 config.ETH_LOCKUP_PRIVATE_KEY = process.env.ETH_LOCKUP_PRIVATE_KEY || defaultConfig.ETH_LOCKUP_PRIVATE_KEY;
-
 
 config.ETH_URL = process.env.ETH_URL
   || defaultConfig.ETH_URL

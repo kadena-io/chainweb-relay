@@ -77,3 +77,31 @@ docker build -t lockup-transfers -f test/Dockerfile .
 docker run -e INFURA_API_TOKEN=... -e ETH_TEST_PRIVATE_KEY=... lockup-transfers
 ```
 
+## Testing With Docker Compose
+
+1. Create `.env.test` and fill out the respective settings:
+
+```
+INFURA_API_TOKEN=
+ETH_TEST_PRIVATE_KEY=
+
+# First bonder
+BOND_NAME=
+PACT_PRIVATE_KEY=
+
+# Second bonder
+BOND_NAME_2=
+PACT_PRIVATE_KEY_2=
+```
+
+2. Build docker containers
+
+```sh
+docker compose build
+```
+
+3. Run tests
+
+```sh
+docker compose --env-file .env.test up
+```

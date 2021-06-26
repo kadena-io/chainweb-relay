@@ -2,18 +2,6 @@ version: "3.9"
 
 services:
 
-  relay-0:
-    container_name: relay-0
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: relay-app
-    restart: unless-stopped
-    environment:
-    - BOND_NAME
-    - PACT_PRIVATE_KEY
-    - INFURA_API_TOKEN
-
   relay-1:
     container_name: relay-1
     build:
@@ -22,8 +10,20 @@ services:
     image: relay-app
     restart: unless-stopped
     environment:
-    - BOND_NAME
-    - PACT_PRIVATE_KEY
+    - BOND_NAME=${BOND_NAME}
+    - PACT_PRIVATE_KEY=${PACT_PRIVATE_KEY}
+    - INFURA_API_TOKEN
+
+  relay-2:
+    container_name: relay-2
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: relay-app
+    restart: unless-stopped
+    environment:
+    - BOND_NAME=${BOND_NAME_2}
+    - PACT_PRIVATE_KEY=${PACT_PRIVATE_KEY_2}
     - INFURA_API_TOKEN
 
   lockup:

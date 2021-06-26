@@ -22,10 +22,10 @@ const main = async () => {
 
 const appInfo = () => {
     console.log("Starting Relay App");
-    console.log(`Eth API URI: ${config.ETH_URL}`);
+    console.log(`ETH API URI: ${config.ETH_URL}`);
     console.log(`Pact API URI: ${config.PACT_URL}`);
-    console.log(`Eth contract: ${config.ETH_CONTRACT_ADDR}`);
-    console.log(`Eth lockup account: ${config.ETH_LOCKUP_PUBLIC_KEY}`);
+    console.log(`ETH contract: ${config.ETH_CONTRACT_ADDR}`);
+    console.log(`ETH lockup account: ${config.ETH_LOCKUP_PUBLIC_KEY}`);
     console.log(`Bonder public key: ${a.bonder.keyPair.publicKey}`);
     console.log(`Bond name: ${a.bonder.name}`);
 }
