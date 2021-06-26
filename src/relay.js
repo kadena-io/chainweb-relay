@@ -175,7 +175,11 @@ const submitPropose = async (proposal) => {
     .then(r => false)
     .catch((e) => {
       // TODO: distinguish between exiting and other failures:
-      console.log(`failed on local: ${proposal.number} - ${proposal.hash}: ${JSON.stringify(e.result.error)}`);
+      if (e.result) {
+          console.log(`failed on local: ${proposal.number} - ${proposal.hash}:`, e.result.error);
+      } else {
+          console.log(`failed on local: ${proposal.number} - ${proposal.hash}:`, e);
+      }
       return true;
     });
   if (!exists) {
@@ -187,10 +191,10 @@ const submitPropose = async (proposal) => {
         const result = await tools.awaitTx(reqKeys[0]);
         console.log(`done proposing ${proposal.number} - ${proposal.hash}: ${result}`);
       } catch (e) {
-        console.log(`failed to propose ${proposal.number} - ${proposal.hash}: ${JSON.stringify(e.result.error)}`);
+        console.log(`failed to propose ${proposal.number} - ${proposal.hash}:`, e);
       }
     } catch (e) {
-      console.log(`failed on send: ${proposal.number} - ${proposal.hash}: ${JSON.stringify(e)}`);
+      console.log(`failed on send: ${proposal.number} - ${proposal.hash}:`, e);
     }
   } else {
     console.log(`skip existing ${proposal.number} - ${proposal.hash}`);
@@ -238,7 +242,11 @@ const submitEndorse = async (proposal) => {
       .then(r => false)
       .catch((e) => {
         // TODO: distinguish between exiting and other failures:
-        console.log(`failed on local: ${proposal.number} - ${proposal.hash}: ${JSON.stringify(e.result.error.message)}`);
+        if (e.result) {
+            console.log(`failed on local: ${proposal.number} - ${proposal.hash}:`, e.result.error.message);
+        } else {
+            console.log(`failed on local: ${proposal.number} - ${proposal.hash}:`, e);
+        }
         return true;
       });
     if (!exists){
@@ -248,12 +256,12 @@ const submitEndorse = async (proposal) => {
         // console.log(`got request keys for ${proposal.number} - ${proposal.hash}: ${reqKeys}`);
         try {
           const result = await tools.awaitTx(reqKeys[0]);
-          console.log(`done endorsing ${proposal.number} - ${proposal.hash}: ${JSON.stringify(result)}`);
+          console.log(`done endorsing ${proposal.number} - ${proposal.hash}:`, result);
         } catch (e) {
-          console.log(`failed to endorse ${proposal.number} - ${proposal.hash}: ${JSON.stringify(e.result.error)}`);
+          console.log(`failed to endorse ${proposal.number} - ${proposal.hash}:`, e);
         }
       } catch (e) {
-        console.log(`failed on send: ${proposal.number} - ${proposal.hash}: ${JSON.stringify(e)}`);
+        console.log(`failed on send: ${proposal.number} - ${proposal.hash}:`, e);
       }
     }
   } else {
