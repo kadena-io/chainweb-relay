@@ -8,6 +8,7 @@ const chainweb = require("chainweb");
 /* ************************************************************************** */
 /* Logging */
 
+// in production set `{level: warn, prettyPrint: false}`
 const logger = require('pino')({level: "debug", prettyPrint: true});
 
 const proposeLogger = logger.child({ topic: "propose" });
