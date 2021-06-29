@@ -14,7 +14,7 @@ npm install
 
 Configuration is done either
 
-*   by filling out the `.env` file,
+*   by creating an `.env` file,
 *   by setting respective environment variables, or
 *   by using docker and providing the settings as environment variables to
     the container.
@@ -37,6 +37,24 @@ Usually set via default environment:
 
 All other settings are mainly for debugging and testing purposes or when
 non-default API servers are used (other then infura.io or api.chainweb.com).
+
+Template for `.env` file:
+
+```sh
+DEFAULT_ENV=kovan
+INFURA_API_TOKEN=
+
+# Relay-app settings
+# BOND_NAME=
+# PACT_PRIVATE_KEY=
+
+# Only for testing with lockup transfers
+ETH_TEST_PRIVATE_KEY=
+
+# For testing with docker compose: second bonder
+BOND_NAME_2=
+PACT_PRIVATE_KEY_2=
+```
 
 ### Command Line
 

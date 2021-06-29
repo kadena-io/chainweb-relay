@@ -31,7 +31,38 @@ const pactResult = (resp) => {
 }
 
 /**
- * Call pact with an Command Object.
+ * Send pact with an Command Object.
+ *
+ * @param cmd the command Object
+ *
+ * @returns request key
+ * @throws if the call fails.
+ *
+ */
+const sendPact = async (cmd) => {
+  const resp = await pact.fetch.send(cmd, config.PACT_URL);
+  const reqKeys = resp.requestKeys;
+  if (reqKeys) {
+    return reqKeys[0];
+  } else {
+    throw resp;
+  }
+}
+
+/**
+ * Locally call pact with an Command Object.
+ *
+ * @param cmd the command Object
+ *
+ * @returns data of the result of the call.
+ * @throws if the call fails.
+ *
+ */
+const localPact = async (cmd) =>
+    pactResult(await pact.fetch.local(cmd, config.PACT_URL));
+
+/**
+ * Call pact with an Command Object and awaits the transaction result.
  *
  * @param cmd the command Object
  * @param local whether this command is a local call that doesn't change the state of the chain. (default: true)
@@ -40,19 +71,12 @@ const pactResult = (resp) => {
  * @throws if the call fails.
  *
  */
-const callPact = async (cmd, local) => {
+const awaitPact = async (cmd, local) => {
   if (typeof local === 'undefined' || local) {
-    const resp = await pact.fetch.local(cmd, config.PACT_URL);
-    return pactResult(resp);
+    return await localPact(cmd);
   } else {
-    const resp = await pact.fetch.send(cmd, config.PACT_URL);
-    // console.log(`pact send resp: ${JSON.stringify(resp)}`);
-    const reqKeys = resp.requestKeys;
-    if (reqKeys) {
-      return reqKeys;
-    } else {
-      throw resp;
-    }
+    const reqKey = await sendPact(cmd);
+    return await awaitTx(reqKey);
   }
 }
 
@@ -160,7 +184,7 @@ const RELAY_GAS_STATION_ACCOUNT = "relay-free-gas";
 const poolGet = async () => {
   const cmd = mkCmd();
   cmd.pactCode = `(${config.PACT_POOL_MODULE}.get-pool ${config.PACT_MODULE}.POOL)`;
-  return await callPact(cmd);
+  return await localPact(cmd);
 };
 
 /**
@@ -198,7 +222,7 @@ const relayNewBond = async (keyPair, account, amount, local) => {
       keys: [keyPair.publicKey],
     }
   };
-  return await callPact(cmd, local);
+  return await awaitPact(cmd, local);
 }
 
 /* ************************************************************************** */
@@ -208,7 +232,7 @@ const relayNewBond = async (keyPair, account, amount, local) => {
  * Propose a header to the relay.
  */
 const relayPropose = async (keyPair, bond, proposal, local) => {
-  const cmd = mkCmd(keyPair, keyPair.publicKey);
+  const cmd = mkCmd(keyPair, RELAY_GAS_STATION_ACCOUNT);
   cmd.envData = {
     header: {
       hash: proposal.hash,
@@ -218,7 +242,7 @@ const relayPropose = async (keyPair, bond, proposal, local) => {
     bond: bond,
   };
   cmd.keyPairs[0].clist = [
-    gasCap().cap,
+    relayGasCap().cap,
     relayBondCap(bond).cap,
   ]
   cmd.pactCode = `(${config.PACT_MODULE}.propose (read-msg 'header) (read-msg 'bond))`;
@@ -227,13 +251,13 @@ const relayPropose = async (keyPair, bond, proposal, local) => {
   // console.log("envData.bond", cmd.envData.bond);
   // console.log("caps", cmd.keyPairs[0].clist);
   // console.log("meta", cmd.meta);
-  return await callPact(cmd, local);
+  return await awaitPact(cmd, local);
 }
 
 /**
- * Endorse a header to the relay.
+ * Check Bond
  */
-const relayCheckBond = async (keyPair, bond, local) => {
+const relayCheckBond = async (keyPair, bond) => {
   const cmd = mkCmd(keyPair, RELAY_GAS_STATION_ACCOUNT);
   cmd.envData = {
     bond: bond
@@ -241,9 +265,26 @@ const relayCheckBond = async (keyPair, bond, local) => {
   cmd.pactCode = `(enforce-guard
                     (at 'guard
                       (${config.PACT_POOL_MODULE}.get-active-bond (read-msg 'bond))))`;
-  return await callPact(cmd, local);
+  return await localPact(cmd);
 }
 
+/**
+ * Renew Bond
+ */
+const relayRenewBond = async (keyPair, bond, local) => {
+  const cmd = mkCmd(keyPair, RELAY_GAS_STATION_ACCOUNT);
+  cmd.envData = {
+    bond: bond
+  }
+  cmd.keyPairs[0].clist = [
+    relayGasCap().cap,
+    poolBondCap(bond).cap,
+  ]
+  cmd.pactCode = `(${config.PACT_POOL_MODULE}.renew (read-msg 'bond))`;
+  // console.log("cmd", cmd);
+  // console.log("caps", cmd.keyPairs[0].clist);
+  return await awaitPact(cmd, local);
+}
 
 /**
  * Endorse a header to the relay.
@@ -266,11 +307,11 @@ const relayEndorse = async (keyPair, bond, proposal, local) => {
   // console.log("call pact:", cmd.pactCode);
   // console.log("envData", cmd.envData.header);
   // console.log("caps", cmd.keyPairs[0].clist);
-  return await callPact(cmd, local);
+  return await awaitPact(cmd, local);
 }
 
 
-const relayValidate = async (keyPair, proposal, local) => {
+const relayValidate = async (keyPair, proposal) => {
   const cmd = mkCmd(keyPair, RELAY_GAS_STATION_ACCOUNT);
   cmd.envData = {
     header: {
@@ -280,21 +321,16 @@ const relayValidate = async (keyPair, proposal, local) => {
     },
   };
   cmd.pactCode = `(${config.PACT_MODULE}.validate (read-msg 'header))`;
-
-  try {
-    const resp = await pact.fetch.local(cmd, config.PACT_URL);
-    return resp;
-  } catch(e){
-    console.log(e)
-  }
+  return await localPact(cmd);
 }
 
-//CONFIRMATION DEPTH
 /* ************************************************************************** */
 
 module.exports = {
   mkCmd: mkCmd,
-  call: callPact,
+  call: awaitPact,
+  local: localPact,
+  send: sendPact,
   awaitTx: awaitTx,
   pool: {
     get: poolGet,
@@ -304,7 +340,8 @@ module.exports = {
     endorse: relayEndorse,
     validate: relayValidate,
     newBond: relayNewBond,
-    checkBond: relayCheckBond
+    checkBond: relayCheckBond,
+    renew: relayRenewBond,
   },
   capabilities: {
     gas: gasCap,

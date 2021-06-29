@@ -2,7 +2,17 @@ const Web3 = require("web3")
 const Pact = require("pact-lang-api");
 const config = require("../config");
 const tools = require("./pact-tools");
-const chainweb = require("chainweb")
+const chainweb = require("chainweb");
+
+
+/* ************************************************************************** */
+/* Logging */
+
+const logger = require('pino')({level: "debug", prettyPrint: true});
+
+const proposeLogger = logger.child({ topic: "propose" });
+const endorseLogger = logger.child({ topic: "endorse" });
+
 
 /* ************************************************************************** */
 /* ERC-20 contract Addresses */
@@ -14,7 +24,7 @@ const usdtRopsten = '0x6ee856ae55b6e1a249f04cd3b947141bc146273c';
 /* Initialize Pact API Provider */
 
 const bonder = {
-  keyPair: config.PACT_PRIVATE_KEY.length===64 ? Pact.crypto.restoreKeyPairFromSecretKey(config.PACT_PRIVATE_KEY): undefined,
+  keyPair: Pact.crypto.restoreKeyPairFromSecretKey(config.PACT_PRIVATE_KEY),
   name: config.BOND_NAME,
 }
 
@@ -133,10 +143,13 @@ async function awaitBlock (number, hash) {
 /* ************************************************************************** */
 /* Proposals */
 
-async function eventToProposal (e) {
+const timeout = (ms) => {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+const eventToProposal = async (e) => {
   const block = await awaitBlock (e.blockNumber, e.blockHash);
   if (block) {
-    console.log(`got proposed block ${e.blockNumber} - ${e.blockHash}`);
     return {
         "hash": block.hash,
         "number": block.number,
@@ -148,19 +161,27 @@ async function eventToProposal (e) {
 }
 
 const proposals = () => {
-  console.log("Starting propose...")
+  proposeLogger.info("Starting propose...")
   let current = null;
   const events = lockupEvents();
-  events.on('data', d => {
+  events.on('data', async d => {
+    const logg = proposeLogger.child({ blockNumber: d.blockNumber, blockHash: d.blockHash })
     if (d.removed) {
-      console.log(`skip removed event ${d.blockNumber} (current: ${current})`);
+      logg.debug("skip removed event");
     } else if (current !== null && d.blockNumber <= current) {
-      console.log(`skip non-current event ${d.blockNumber} (current: ${current})`);
+      logg.debug({ current: current }, "skip non-current event");
     } else {
       current = d.blockNumber;
       s = delay(d.blockHash);
-      console.log(`wait ${s}s on ${d.blockNumber} - ${d.blockHash}`);
-      setTimeout(() => eventToProposal(d).then(p => submitPropose(p)), s * 1000);
+      logg.debug(`wait ${s}s`);
+      await timeout(s * 1000);
+      const p = await eventToProposal(d);
+      logg.info("new proposal");
+      try {
+        submitPropose(logg, p)
+      } catch(e) {
+        logg.error({error: e}, "proposal failed");
+      }
     }
   });
   return events;
@@ -169,35 +190,38 @@ const proposals = () => {
 // We could be more fancy and listen to propose events on the
 // Kadena side and drop the proposal if it is already submitted.
 //
-const submitPropose = async (proposal) => {
+const submitPropose = async (logg, proposal) => {
+
   // check that proposal hasn't been submitted yet
-  const exists = await tools.relay.propose(bonder.keyPair, config.BOND_NAME, proposal)
-    .then(r => false)
+  const proposed = await tools.relay.propose(bonder.keyPair, config.BOND_NAME, proposal)
+    .then(r => {
+      logg.debug({result: r}, "local succeeded");
+      return false;
+    })
     .catch((e) => {
-      // TODO: distinguish between exiting and other failures:
-      if (e.result) {
-          console.log(`failed on local: ${proposal.number} - ${proposal.hash}:`, e.result.error);
+      if (e.result?.error?.message === 'Already active proposal') {
+        return true;
       } else {
-          console.log(`failed on local: ${proposal.number} - ${proposal.hash}:`, e);
+        logg.error({error: e}, "local propose failed");
+        throw e;
       }
-      return true;
     });
-  if (!exists) {
-    console.log(`propose ${proposal.number} - ${proposal.hash}`);
-    try {
-      const reqKeys = await tools.relay.propose(bonder.keyPair, config.BOND_NAME, proposal, false);
-      // console.log(`got request keys for ${proposal.number} - ${proposal.hash}: ${reqKeys}`);
-      try {
-        const result = await tools.awaitTx(reqKeys[0]);
-        console.log(`done proposing ${proposal.number} - ${proposal.hash}: ${result}`);
-      } catch (e) {
-        console.log(`failed to propose ${proposal.number} - ${proposal.hash}:`, e);
-      }
-    } catch (e) {
-      console.log(`failed on send: ${proposal.number} - ${proposal.hash}:`, e);
-    }
+
+  if (proposed) {
+    logg.info("skip existing proposal");
   } else {
-    console.log(`skip existing ${proposal.number} - ${proposal.hash}`);
+    logg.info(`submitting proposal`, proposal);
+    const result = await tools.relay.propose(bonder.keyPair, config.BOND_NAME, proposal, false)
+      .catch(e => {
+        const msg = e.result?.error?.message;
+        if (msg === 'Already active proposal') {
+          logg.warn({warning: msg}, "proposal failed");
+        } else {
+          throw e;
+        }
+      });
+    logg.debug({result: result});
+    logg.info("successes");
   }
 }
 
@@ -205,7 +229,7 @@ const submitPropose = async (proposal) => {
 /* Endorsement */
 
 const endorsement = async () => {
-  console.log("Starting endorse...")
+  endorseLogger.info("Starting endorse...");
 
   // Check recentEvents
   let recentEvents = await chainweb.event.recent(
@@ -216,56 +240,84 @@ const endorsement = async () => {
       `https://${config.PACT_SERVER}`
   );
   let filteredEvents = recentEvents.filter(e => e.name === "PROPOSE" && e.params[3].includes(bonder.name));
-  console.log(`Chainweb Events to endorse in the last ${config.PACT_RECENT_BLOCKS} blocks`, filteredEvents.map(e => e.params[1]))
+  endorseLogger.info(filteredEvents.map(e => e.params[1]), `Chainweb Events to endorse in the last ${config.PACT_RECENT_BLOCKS} blocks`);
   filteredEvents.forEach(async e => processEndorseEvent(e))
 
   // Listens to event stream
   chainweb.event.stream(config.PACT_CONFIRM_DEPTH, [config.PACT_CHAIN_ID], async e => {
     if (e.name === "PROPOSE" && e.params[3].includes(bonder.name)) {
-      // console.log("Got PROPOSE event:", e);
+      endorseLogger.debug(e, "Got PROPOSE event");
       processEndorseEvent(e);
     }
   }, config.PACT_NETWORK_ID, `https://${config.PACT_SERVER}`)
 }
 
 const processEndorseEvent = async (e) => {
-  console.log("Chainweb propose event:", e.params[1])
-  let blockHeader = await eventToProposal({blockNumber: e.params[0].int, blockHash: e.params[1]})
-  submitEndorse(blockHeader);
+  endorseLogger.debug({event: e.params[1]}, "Chainweb propose event");
+  const d = {blockNumber: e.params[0].int, blockHash: e.params[1]};
+  const logg = endorseLogger.child({ blockNumber: d.blockNumber, blockHash: d.blockHash })
+  let blockHeader = await eventToProposal(d);
+  logg.info("new endorsement");
+  try {
+    submitEndorse(logg, blockHeader);
+  } catch(e) {
+    logg.error({error: e}, "endorsment failed");
+  }
 }
 
-const submitEndorse = async (proposal) => {
+const submitEndorse = async (logg, proposal) => {
+
   // check that proposal hasn't been validated yet
-  const validated = await tools.relay.validate(bonder.keyPair, proposal, true);
-  if (validated.result.status === "failure"){
-    const exists = await tools.relay.endorse(bonder.keyPair, config.BOND_NAME, proposal)
-      .then(r => false)
-      .catch((e) => {
-        // TODO: distinguish between exiting and other failures:
-        if (e.result) {
-            console.log(`failed on local: ${proposal.number} - ${proposal.hash}:`, e.result.error.message);
-        } else {
-            console.log(`failed on local: ${proposal.number} - ${proposal.hash}:`, e);
-        }
-        return true;
-      });
-    if (!exists){
-      console.log(`endorse ${proposal.number} - ${proposal.hash}`);
-      try {
-        const reqKeys = await tools.relay.endorse(bonder.keyPair, bonder.name, proposal, false);
-        // console.log(`got request keys for ${proposal.number} - ${proposal.hash}: ${reqKeys}`);
-        try {
-          const result = await tools.awaitTx(reqKeys[0]);
-          console.log(`done endorsing ${proposal.number} - ${proposal.hash}:`, result);
-        } catch (e) {
-          console.log(`failed to endorse ${proposal.number} - ${proposal.hash}:`, e);
-        }
-      } catch (e) {
-        console.log(`failed on send: ${proposal.number} - ${proposal.hash}:`, e);
+  const validated = await tools.relay.validate(bonder.keyPair, proposal)
+    .then(r => {
+      logg.info("already validated");
+      return true;
+    })
+    .catch(e => {
+      if (e.result?.error?.message === 'Not accepted') {
+        logg.info("not yet validated");
+        return false;
+      } else {
+        logg.error({error: e}, "validation failed");
+        throw e;
       }
-    }
+    });
+
+  if (validated) {
+    logg.info("skip validated proposal");
   } else {
-    console.log(`skip existing ${proposal.number} - ${proposal.hash}`);
+
+    // check if header is already endorsed
+    const endorsed = await tools.relay.endorse(bonder.keyPair, config.BOND_NAME, proposal)
+      .then(r => {
+        logg.debug({result: r}, "local succeeded");
+        return false;
+      })
+      .catch((e) => {
+        if (e.result?.error?.message === 'Duplicate endorse') {
+          return true;
+        } else {
+          logg.error({error: e}, "local endorse failed");
+          throw e;
+        }
+      });
+
+    if (endorsed) {
+      logg.info("skip existing endorsement");
+    } else {
+      logg.info(`submitting endorsement`, proposal);
+      const result = await tools.relay.endorse(bonder.keyPair, bonder.name, proposal, false)
+        .catch(e => {
+          const msg = e.result?.error?.message;
+          if (msg === 'Duplicate endorse') {
+            logg.warn({warning: msg}, "endorsement failed");
+          } else {
+            throw e;
+          }
+        });
+      logg.debug({result: result});
+      logg.info("successes");
+    }
   }
 }
 
@@ -325,9 +377,9 @@ module.exports = {
   checkBond: checkBond,
   bonder: bonder,
   // internal, for testing
-  delay: delay,
-  lockupEvents: lockupEvents,
-  eventToProposal: eventToProposal,
-  contract: contract,
+  // delay: delay,
+  // lockupEvents: lockupEvents,
+  // eventToProposal: eventToProposal,
+  // contract: contract,
 };
 
