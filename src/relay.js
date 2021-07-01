@@ -4,12 +4,13 @@ const config = require("../config");
 const tools = require("./pact-tools");
 const chainweb = require("chainweb");
 
+// const { Heapify } = require("heapify");
 
 /* ************************************************************************** */
 /* Logging */
 
 // in production set `{level: warn, prettyPrint: false}`
-const logger = require('pino')({level: "debug", prettyPrint: true});
+const logger = require('pino')({level: config.LOG_LEVEL, prettyPrint: true});
 
 const proposeLogger = logger.child({ topic: "propose" });
 const endorseLogger = logger.child({ topic: "endorse" });
@@ -140,6 +141,92 @@ async function awaitBlock (number, hash) {
     });
   }
 }
+
+/*
+const ethConfirmation = (confirmationDepth) => {
+
+  const updateDelayMs = 5000;
+
+  this.confirmationDepth = confirmationDepth;
+
+  // lower bound on current height
+  this.last = 0;
+
+  // Promise of recent update. Undefined if no update is underway
+  this.updating = undefined;
+
+  // Get most recent block height and update last value.
+  this.recent = async () => {
+    if (this.updating === undefined) {
+      this.updating = web3.getBlockNumber();
+      this.updating
+        .then(n => {
+          this.last = n;
+          setTimeout(() => { this.updating = undefined; }, updateDelayMs);
+        })
+        .catch(e => {
+          this.updating = undefined;
+          throw e;
+        });
+    }
+    return await this.updating;
+  }
+
+  // Lower bound on the last confirmed height
+  get this.lastConfirmed() {
+    return Math.max(0, this.last - this.ConfirmationDepth);
+  }
+
+  // check if a given block height is confirmed
+  this.isConfirmed = async (number) => {
+    if (number <= this.lastConfirmed) {
+      return true;
+    } else {
+      await recent();
+      return number <= this.lastConfirmed;
+    }
+  }
+
+  this.queue = new Heapify();
+
+  this.runSubscrption() {
+
+  }
+
+  this.awaitConfirmation = async (number) => {
+    if (isConfirmed(number) {
+      return;
+    } else {
+      const promise = new Promise();
+      this.queue.push(promise, - number);
+      return promise;
+    }
+  }
+}
+
+async function awaitConfirmedBlock (number, hash, depth) {
+  const block = await awaitBlock(number, hash)
+
+  const block = await web3.eth.getBlock(hash);
+  if (block) {
+    return block;
+  } else {
+    const s = web3.eth.subscribe('newBlockHeaders');
+    return new Promise((resolve, reject) => {
+      s.on('data', b => {
+        if (b.number === number) {
+          s.unsubscribe();
+          resolve(b);
+        } else if (b.number > number) {
+          s.unsubscribe();
+          web3.eth.getBlock(hash).then(resolve).catch(reject);
+        }
+      });
+    });
+  }
+}
+
+*/
 
 /* ************************************************************************** */
 /* Proposals */

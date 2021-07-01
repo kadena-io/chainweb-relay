@@ -13,6 +13,7 @@ services:
     - BOND_NAME=${BOND_NAME}
     - PACT_PRIVATE_KEY=${PACT_PRIVATE_KEY}
     - INFURA_API_TOKEN
+    - LOG_LEVEL
 
   relay-2:
     container_name: relay-2
@@ -25,6 +26,7 @@ services:
     - BOND_NAME=${BOND_NAME_2}
     - PACT_PRIVATE_KEY=${PACT_PRIVATE_KEY_2}
     - INFURA_API_TOKEN
+    - LOG_LEVEL
 
   lockup:
     container_name: lockup
@@ -36,3 +38,4 @@ services:
     environment:
     - INFURA_API_TOKEN
     - ETH_TEST_PRIVATE_KEY
+    - LOG_LEVEL

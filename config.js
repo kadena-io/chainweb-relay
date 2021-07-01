@@ -150,17 +150,20 @@ pactMainnet = {
 const ropstenConfig = {
   ... ethRopsten,
   ... pactTestnet,
+  LOG_LEVEL: 'info',
 };
 
 const kovanConfig = {
   ... ethKovan,
   ... pactTestnet,
+  LOG_LEVEL: 'debug',
 };
 
 // TODO: fill in default values above
 const prodConfig = {
   ... ethMainnet,
   ... pactMainnet,
+  LOG_LEVEL: 'warn',
 };
 
 let defaultConfig = kovanConfig;
@@ -186,6 +189,10 @@ switch (process.env.DEFAULT_ENV) {
 /* TODO check for undefined values */
 
 let config = {};
+
+/* Logging */
+
+config.LOG_LEVEL = process.env.LOG_LEVEL || defaultConfig.LOG_LEVEL;
 
 /* Secrets and User Settings */
 config.INFURA_API_TOKEN = process.env.INFURA_API_TOKEN || defaultConfig.INFURA_API_TOKEN;

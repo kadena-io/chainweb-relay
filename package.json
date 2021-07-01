@@ -12,9 +12,10 @@
   "dependencies": {
     "chainweb": "^1.0.0",
     "dotenv": "^10.0.0",
+    "heapify": "^0.4.0",
     "pact-lang-api": "^4.2.0",
-    "pino-pretty": "^5.1.0",
     "pino": "^6.11.3",
+    "pino-pretty": "^5.1.0",
     "web3": "^1.3.6"
   }
 }
