@@ -55,7 +55,7 @@ Required settings for relay-app:
 
 Usually set via default environment:
 
-*   `ETH_NETWORK_ID`: network identifier for mainnet or various testnets. Example: xxx
+*   `ETH_NETWORK_ID`: network identifier for mainnet or various testnets. Default is `kovan`
 *   `ETH_CONTRACT_ADDR`: Contract address for observing transfers.
 *   `ETH_LOCKUP_PUBLIC_KEY`: Lockup address for observing transfers.
 
