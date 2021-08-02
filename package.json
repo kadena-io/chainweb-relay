@@ -10,7 +10,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "chainweb": "^1.0.0",
+    "chainweb": "https://github.com/kadena-io/chainweb.js",
     "dotenv": "^10.0.0",
     "heapify": "^0.4.0",
     "pact-lang-api": "^4.2.0",
