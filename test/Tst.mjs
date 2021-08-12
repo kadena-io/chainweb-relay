@@ -7,9 +7,21 @@
  *
  */
 
-let Web3 = require("web3")
-let tst = require("./abi/tst.json");
-let config = require("../config");
+import { initWeb3 } from "../src/eth/Utils.mjs";
+import config from "../Config.mjs";
+import Pino from "pino";
+
+/* Import JSON file */
+
+// import { tst } from "./abi/tst.json";
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const tst = require('./abi/tst.json');
+
+/* ************************************************************************** */
+/* Logging */
+
+const logger = Pino({level: config.LOG_LEVEL, prettyPrint: true, topic: "TestStandardToken"});
 
 /* ************************************************************************** */
 /* Configuration */
@@ -25,7 +37,7 @@ const lockupPrivateKey = config.ETH_LOCKUP_PRIVATE_KEY;
 /* ************************************************************************** */
 /* Setup Web3 */
 
-const web3 = new Web3(Web3.givenProvider || config.ETH_URL);
+const web3 = initWeb3(logger);
 web3.eth.Contract.setProvider(config.ETH_URL);
 
 /* ************************************************************************** */
@@ -92,18 +104,24 @@ async function balanceOf(acc) {
 /* ************************************************************************** */
 /* Test Accounts */
 
-module.exports = {
-  contract: contract,
-  address: contractAddr,
-  abi: tst.abi,
-  methods: {
-    sendMethod: sendMethod,
-    transfer: transfer,
-    balanceOf: balanceOf,
-    fund: fund,
-  },
-  accounts: {
-    test: testAccount,
-    lockup: lockupAccount,
-  }
+const methods = {
+  sendMethod: sendMethod,
+  transfer: transfer,
+  balanceOf: balanceOf,
+  fund: fund,
+};
+
+const accounts = {
+  test: testAccount,
+  lockup: lockupAccount,
+};
+
+const abi = tst.abi;
+
+export {
+  contract,
+  contractAddr as address,
+  abi,
+  methods,
+  accounts,
 };

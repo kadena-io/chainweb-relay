@@ -1,0 +1,6 @@
+{
+    "testRegex": "(/test/[A-Z].*\\.m?js)$",
+    "verbose": true,
+    "moduleFileExtensions": ["js", "mjs", "jsx", "ts", "tsx", "json", "node"],
+    "setupFiles": [ "<rootDir>/test/setup-tests.js" ]
+}
