@@ -1,3 +1,5 @@
+'use strict';
+
 import Web3 from "web3";
 import config from "../../Config.mjs";
 
@@ -14,7 +16,7 @@ export class ConsoleLogger {
   child (opts) { return new ConsoleLogger(opts); }
   debug (msg) { console.debug(this.topic, msg); }
   info (msg) { console.info(this.topic, msg); }
-  warn (msg) { console.warn(this.topci, msg); }
+  warn (msg) { console.warn(this.topic, msg); }
   error (msg) { console.error(this.topic, msg); }
 }
 
@@ -24,7 +26,16 @@ export class ConsoleLogger {
 export function initProvider (logger) {
 
   const logg = logger.child({ topic: "provider" });
-  const provider = new Web3.providers.WebsocketProvider(eth_url);
+
+  const opts = {
+    reconnect: {
+      auto: false,
+      delay: 1000,
+      maxAttempts: 2,
+    },
+  };
+
+  const provider = new Web3.providers.WebsocketProvider(eth_url, opts);
 
   if (!provider) {
     const msg = "ERROR: provider not available";
@@ -32,12 +43,28 @@ export function initProvider (logger) {
     throw new Error(msg);
   }
 
-  provider.closed = new Promise(resolve =>
-    provider.on('close', () => resolve())
+  provider.closed_ = new Promise(resolve =>
+    provider.on('close', () => {
+      logg.info(`provider ${eth_url} closed`);
+      resolve();
+    })
   );
 
-  provider.on("connect", () => logg.info(`provider ${eth_url} connected`));
-  provider.on('error', e => logg.warn(`provider error for ${eth_url}`, e));
+  provider.connected_ = new Promise(resolve =>
+    provider.on('connect', () => {
+      logg.info(`provider ${eth_url} connected`);
+      resolve();
+    })
+  );
+
+  provider.errored_ = new Promise(resolve =>
+    provider.on('error', e => {
+      provider.disconnect();
+      logg.error(`provider error for ${eth_url}`, e);
+      resolve(e);
+    })
+  );
+
   return provider;
 }
 
@@ -47,7 +74,8 @@ export function initWeb3 (logger) {
   const web3 = new Web3(provider);
   web3.close = async () => {
     provider.disconnect();
-    await provider.closed;
+    provider.connection._client.abort();
+    await provider.closed_;
   }
   return web3;
 }

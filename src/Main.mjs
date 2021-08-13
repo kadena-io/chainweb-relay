@@ -40,6 +40,11 @@ const appInfo = () => {
 const web3 = initWeb3(logger);
 const confirmation = new Confirmation(web3);
 
+web3.provider.errored.then(e => {
+  logger.error("web3 provider failed", e);
+  process.exit(1);
+});
+
 /* ************************************************************************** */
 /* Main */
 
@@ -55,6 +60,16 @@ const main = async () => {
     }
     throw e;
   };
+
+  await Promise.race([
+      web3.currentProvider.connected_,
+      web3.currentProvider.errored_.then(async e => {
+        const msg = "Failed to initialize web3. Most likely the Ethereum JSON RPC Provider URL was not configured. The easiest way to do so is to provide an Infura API token as environment variable INFURA_API_TOKEN.";
+        console.error(msg, e);
+        await web3.currentProvider.closed_;
+        throw e;
+      }),
+  ]);
 
   try {
     relay.proposals(proposeLogger, web3, confirmation);

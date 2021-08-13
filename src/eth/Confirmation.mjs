@@ -1,3 +1,5 @@
+'use strict';
+
 import { getHeaderByNumber } from "./Utils.mjs";
 import PriorityQueue from "../PriorityQueue.mjs";
 
