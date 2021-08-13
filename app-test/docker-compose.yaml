@@ -5,7 +5,7 @@ services:
   relay-1:
     container_name: relay-1
     build:
-      context: .
+      context: ..
       dockerfile: Dockerfile
     image: relay-app
     restart: unless-stopped
@@ -18,7 +18,7 @@ services:
   relay-2:
     container_name: relay-2
     build:
-      context: .
+      context: ..
       dockerfile: Dockerfile
     image: relay-app
     restart: unless-stopped
@@ -29,10 +29,10 @@ services:
     - LOG_LEVEL
 
   lockup:
-    container_name: lockup
+    container_name: run-lockups
     build:
-      context: .
-      dockerfile: test/Dockerfile
+      context: ..
+      dockerfile: ./app-test/RunLockups.Dockerfile
     image: relay-test-lockup
     restart: unless-stopped
     environment:

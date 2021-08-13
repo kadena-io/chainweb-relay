@@ -1,4 +1,3 @@
-import Web3 from "web3";
 import { getHeaderByNumber } from "./Utils.mjs";
 import PriorityQueue from "../PriorityQueue.mjs";
 

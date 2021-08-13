@@ -5,8 +5,9 @@
   "main": "src/Main.mjs",
   "scripts": {
     "start": "node src/Main.mjs",
-    "start:tx": "node test/transaction.js",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+    "start:test-lockups": "node app-test/RunLockups.mjs",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "app-test": "docker compose -f app-test/docker-compose.yaml --env-file=app-test/.env up --build"
   },
   "author": "Lars Kuhtz <lars@kadena.io>",
   "license": "MIT",
