@@ -15,8 +15,6 @@
     "chainweb": "^2.0.0",
     "dotenv": "^10.0.0",
     "flatqueue": "^1.2.1",
-    "google-closure-library": "^20210601.0.0",
-    "heapify": "^0.4.0",
     "pact-lang-api": "^4.2.0",
     "pino": "^6.11.3",
     "pino-pretty": "^5.1.0",
