@@ -33,7 +33,7 @@ export default class Confirmation {
   constructor(web3, opts) {
     this.web3 = web3;
 
-    /* Update last block at most every 5 seconds
+    /* Update last block at most once per second
     */
     this.rate = opts?.rate ?? 1000;
   }
@@ -68,7 +68,7 @@ export default class Confirmation {
    *
    * @param {number} number - block number
    * @param {number} depth - depth to check for
-   * @returns {boolean} true if the block number has reached the requested depth;
+   * @returns {Promise<boolean>} true if the block number has reached the requested depth;
    */
   async isConfirmed (number, depth) {
     if (number + depth <= this.last) {
@@ -95,7 +95,15 @@ export default class Confirmation {
           entry.reject(e);
         }
         this.stopSubscription();
-        throw e;
+        console.error("Eth subscription failed. Stopping confirmation queue");
+        process.exit(1);
+        // FIXME is this the right thing to do? Can't we do better?
+      });
+
+      const connected = new Promise((resolve) => {
+        this.subscription.on("connected", () => {
+          resolve();
+        });
       });
 
       this.subscription.on("data", hdr => {
@@ -130,6 +138,9 @@ export default class Confirmation {
           }
         }
       });
+      return connected;
+    } else {
+      return Promise.resolve();
     }
   };
 
@@ -148,7 +159,8 @@ export default class Confirmation {
    * @param {string} [hash] - optional hash
    * @param {object} [header] - optional header
    */
-  enqueue(number, depth) {
+  async enqueue(number, depth) {
+    await this.runSubscription();
     const promise = new Promise((resolve, reject) => {
       this.queue.insert(number + depth, {
         resolve: resolve,
@@ -156,7 +168,6 @@ export default class Confirmation {
         number: number,
       });
     });
-    this.runSubscription();
     return promise;
   };
 
@@ -176,7 +187,8 @@ export default class Confirmation {
    * @returns {Promis<Object>} the header of the given number when it has reached the requested depth
    */
   async confirmedBlock (number, depth, hash) {
-    const hdr = (await this.isConfirmed(number, depth)) === true
+    const isConfirmed = await this.isConfirmed(number, depth); 
+    const hdr = isConfirmed
       ? await getHeaderByNumber(this.web3, number)
       : await this.enqueue(number, depth);
     if (hash && hash != hdr.hash) {

@@ -9,18 +9,6 @@ import config from "../../Config.mjs";
 const eth_url = config.ETH_URL;
 
 /* ************************************************************************** */
-/* Test Logger */
-
-export class ConsoleLogger {
-  constructor(opts) { this.topic = opts?.topic ?? ""; }
-  child (opts) { return new ConsoleLogger(opts); }
-  debug (msg) { console.debug(this.topic, msg); }
-  info (msg) { console.info(this.topic, msg); }
-  warn (msg) { console.warn(this.topic, msg); }
-  error (msg) { console.error(this.topic, msg); }
-}
-
-/* ************************************************************************** */
 /* Initialize Web3 */
 
 export function initProvider (logger) {
