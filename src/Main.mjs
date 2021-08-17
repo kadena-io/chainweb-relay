@@ -40,7 +40,7 @@ const appInfo = () => {
 const web3 = initWeb3(logger);
 const confirmation = new Confirmation(web3);
 
-web3.provider.errored.then(e => {
+web3.currentProvider.errored_.then(e => {
   logger.error("web3 provider failed", e);
   process.exit(1);
 });
