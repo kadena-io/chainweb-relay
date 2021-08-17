@@ -58,6 +58,8 @@ Usually set via default environment:
 *   `ETH_NETWORK_ID`: network identifier for mainnet or various testnets. Default is `kovan`
 *   `ETH_CONTRACT_ADDR`: Contract address for observing transfers.
 *   `ETH_LOCKUP_PUBLIC_KEY`: Lockup address for observing transfers.
+*   `ETH_CONFIRMATION_DEPTH` (default for mainnet is 20)
+*   `PACT_CONFIRMATION_DEPTH` (default for mainnet is 10)
 
 All other settings are mainly for debugging and testing purposes or when
 non-default API servers are used (other then infura.io or api.chainweb.com).

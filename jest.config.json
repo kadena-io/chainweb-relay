@@ -1,0 +1,7 @@
+{
+    "testRegex": "(/test/(.*/)*[A-Z].*\\.m?js)$",
+    "testPathIgnorePatterns": ["/node_modules/", "/attic/"],
+    "verbose": true,
+    "moduleFileExtensions": ["js", "mjs", "jsx", "ts", "tsx", "json", "node"],
+    "setupFiles": [ "<rootDir>/setup-tests.js" ]
+}

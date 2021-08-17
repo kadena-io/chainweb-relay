@@ -2,8 +2,7 @@ FROM node:16
 WORKDIR /app
 COPY package.json package.json
 COPY package-lock.json package-lock.json
-# RUN npm ci --only=production
-RUN npm install
-COPY config.js .
+RUN npm ci --omit=dev
+COPY Config.mjs .
 COPY src src
-CMD [ "node", "src/main.js" ]
+CMD [ "node", "src/Main.mjs" ]

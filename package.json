@@ -2,20 +2,26 @@
   "name": "chainweb-relay",
   "version": "1.0.0",
   "description": "Chainweb Relay Service",
-  "main": "src/main.js",
+  "main": "src/Main.mjs",
   "scripts": {
-    "start": "node src/main.js",
-    "start:tx": "node test/transaction.js"
+    "start": "node src/Main.mjs",
+    "start:test-lockups": "node app-test/RunLockups.mjs",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "app-test": "docker compose -f app-test/docker-compose.yaml --env-file=app-test/.env up --build"
   },
-  "author": "",
+  "author": "Lars Kuhtz <lars@kadena.io>",
   "license": "MIT",
   "dependencies": {
-    "chainweb": "^1.0.0",
+    "chainweb": "^2.0.0",
     "dotenv": "^10.0.0",
-    "heapify": "^0.4.0",
+    "flatqueue": "^1.2.1",
     "pact-lang-api": "^4.2.0",
     "pino": "^6.11.3",
     "pino-pretty": "^5.1.0",
     "web3": "^1.3.6"
+  },
+  "devDependencies": {
+    "ganache-core": "^2.13.2",
+    "jest": "^27.0.6"
   }
 }

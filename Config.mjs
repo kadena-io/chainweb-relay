@@ -1,7 +1,7 @@
-const pact = require("pact-lang-api")
-const dotenv = require('dotenv');
+import pact from "pact-lang-api";
+import { config as _config } from 'dotenv';
 
-dotenv.config();
+_config();
 
 /* ************************************************************************** */
 /* README
@@ -55,6 +55,7 @@ const ethKovan = {
   ETH_TEST_PRIVATE_KEY: undefined,
   ETH_LOCKUP_PUBLIC_KEY: '0xc7eBC02Ec03d33716FB47b6702498B6C3dEBa83e',
   ETH_LOCKUP_PRIVATE_KEY: undefined,
+  ETH_CONFIRMATION_DEPTH: 4,
 }
 
 /* Ethereum Ropsten */
@@ -70,6 +71,7 @@ const ethRopsten = {
   ETH_TEST_PRIVATE_KEY: undefined,
   ETH_LOCKUP_PUBLIC_KEY: undefined,
   ETH_LOCKUP_PRIVATE_KEY: undefined,
+  ETH_CONFIRMATION_DEPTH: 4,
 }
 
 /* Mainnet */
@@ -85,12 +87,13 @@ const ethMainnet = {
   ETH_TEST_PRIVATE_KEY: undefined,
   ETH_LOCKUP_PUBLIC_KEY: undefined,
   ETH_LOCKUP_PRIVATE_KEY: undefined,
+  ETH_CONFIRMATION_DEPTH: 20, // expected 5min on average; better do your own research
 }
 
 /* ************************************************************************** */
 /* Default Pact Configurations */
 
-pactDevnet = {
+const pactDevnet = {
   PACT_PRIVATE_KEY: pact.crypto.genKeyPair().secretKey,
   BOND_NAME: 'TestBonder:0',
   PACT_NETWORK_ID: 'development',
@@ -105,10 +108,10 @@ pactDevnet = {
   PACT_HIGH_GAS_LIMIT: 60000,
   PACT_HIGH_GAS_PRICE: 0.00000001,
   PACT_RECENT_BLOCKS: 30,
-  PACT_CONFIRM_DEPTH: 1
+  PACT_CONFIRM_DEPTH: 2,
 }
 
-pactTestnet = {
+const pactTestnet = {
   PACT_PRIVATE_KEY: undefined,
   BOND_NAME: undefined,
   PACT_NETWORK_ID: 'testnet04',
@@ -123,10 +126,10 @@ pactTestnet = {
   PACT_HIGH_GAS_LIMIT: 60000,
   PACT_HIGH_GAS_PRICE: 0.00000001,
   PACT_RECENT_BLOCKS: 30,
-  PACT_CONFIRM_DEPTH: 1
+  PACT_CONFIRM_DEPTH: 2,
 }
 
-pactMainnet = {
+const pactMainnet = {
   BOND_NAME: undefined,
   PACT_PRIVATE_KEY: undefined,
   PACT_NETWORK_ID: 'mainnet01',
@@ -141,7 +144,7 @@ pactMainnet = {
   PACT_HIGH_GAS_LIMIT: 60000,
   PACT_HIGH_GAS_PRICE: 0.00000001,
   PACT_RECENT_BLOCKS: 30,
-  PACT_CONFIRM_DEPTH: 4
+  PACT_CONFIRM_DEPTH: 10, // expected 5min on average
 }
 
 /* ************************************************************************** */
@@ -206,6 +209,7 @@ config.ETH_TEST_PUBLIC_KEY = process.env.ETH_TEST_PUBLIC_KEY || defaultConfig.ET
 config.ETH_TEST_PRIVATE_KEY = process.env.ETH_TEST_PRIVATE_KEY || defaultConfig.ETH_TEST_PRIVATE_KEY;
 config.ETH_LOCKUP_PUBLIC_KEY = process.env.ETH_LOCKUP_PUBLIC_KEY || defaultConfig.ETH_LOCKUP_PUBLIC_KEY;
 config.ETH_LOCKUP_PRIVATE_KEY = process.env.ETH_LOCKUP_PRIVATE_KEY || defaultConfig.ETH_LOCKUP_PRIVATE_KEY;
+config.ETH_CONFIRMATION_DEPTH = process.env.ETH_CONFIRMATION_DEPTH || defaultConfig.ETH_CONFIRMATION_DEPTH;
 
 config.ETH_URL = process.env.ETH_URL
   || defaultConfig.ETH_URL
@@ -235,4 +239,4 @@ config.PACT_CONFIRM_DEPTH = process.env.PACT_CONFIRM_DEPTH || defaultConfig.PACT
 /* ************************************************************************** */
 /* Export */
 
-module.exports = config;
+export default config;
