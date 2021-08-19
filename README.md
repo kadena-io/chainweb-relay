@@ -31,6 +31,18 @@ Rotating can be achieved by
 1. Generating a keypair
 2. Using the "rotate bond" button on relay.chainweb.com for the appropriate bond.
 
+## Quick Start
+
+```sh
+npm install --global kadena-relay-app
+INFURA_API_TOKEN=... BOND_NAME=... PACT_PRIVATE_KEY=... relay-app
+```
+
+Run with Docker:
+
+```sh
+docker run -e INFURA_API_TOKEN=... -e BOND_NAME=... -e PACT_PRIVATE_KEY=... kadena/relay-app
+```
 
 ## Usage
 
@@ -38,8 +50,8 @@ Rotating can be achieved by
 
 Configuration is done either
 
-*   by creating an `.env` file,
 *   by setting respective environment variables, or
+*   by creating an `.env` file,
 *   by using docker and providing the settings as environment variables to
     the container.
 
@@ -61,8 +73,12 @@ Usually set via default environment:
 *   `ETH_CONFIRMATION_DEPTH` (default for mainnet is 20)
 *   `PACT_CONFIRMATION_DEPTH` (default for mainnet is 10)
 
-All other settings are mainly for debugging and testing purposes or when
-non-default API servers are used (other then infura.io or api.chainweb.com).
+By default infura.io and api.chainweb.com are used as API servers for Ethereum
+and Kadena, respectively. Other API providers can be configured through setting
+`ETH_URL` and `PACT_SERVER` environment variables.
+
+All other settings are mainly for debugging and testing purposes. For details
+have a look at `Config.mjs`.
 
 Template for `.env` file:
 
@@ -70,9 +86,9 @@ Template for `.env` file:
 DEFAULT_ENV=kovan
 INFURA_API_TOKEN=
 
-# Relay-app settings
-# BOND_NAME=
-# PACT_PRIVATE_KEY=
+# Relay-app settings (always required)
+BOND_NAME=
+PACT_PRIVATE_KEY=
 
 # Only for testing with lockup transfers
 ETH_TEST_PRIVATE_KEY=
@@ -82,13 +98,11 @@ BOND_NAME_2=
 PACT_PRIVATE_KEY_2=
 ```
 
-### Command Line
+### Running From Source
 
 ```sh
-
-npm install # if needed
-npm start
-
+npm install
+INFURA_API_TOKEN=... BOND_NAME=... PACT_PRIVATE_KEY=... npm start
 ```
 
 ### Docker
@@ -100,54 +114,63 @@ docker run -e INFURA_API_TOKEN=... -e BOND_NAME=... -e PACT_PRIVATE_KEY=... rela
 
 or provide the settings via an local `.env` file:
 
-
 ```sh
 docker run -v "$PWD/.env:/app/.env:ro" relay-app
 ```
 
-## Generating Test Lockup Transfers
+## Testing and Development
 
-Required settings for testing with lockup transfers
+### Unit Tests
+
+```sh
+npm test
+```
+
+### Generating Test Lockup Transfers
+
+Required settings for testing with lockup transfers for Test Standard Token (TST)
 
 *   `INFURA_API_TOKEN`
 *   `ETH_TEST_PRIVATE_KEY`
 
 ```sh
-npm start:tx
+npm start:test-lockups
 ```
 
 or via docker as
 
 ```sh
-docker build -t lockup-transfers -f test/Dockerfile .
+docker build -t lockup-transfers -f app-test/RunLockups.Dockerfile .
 docker run -e INFURA_API_TOKEN=... -e ETH_TEST_PRIVATE_KEY=... lockup-transfers
 ```
 
-## Testing With Docker Compose
+### Testing With Docker Compose
 
-1. Create `.env.test` and fill out the respective settings:
+1.  Create `app-test/.env` and fill out the respective settings:
 
-```
-INFURA_API_TOKEN=
-ETH_TEST_PRIVATE_KEY=
+    ```
+    INFURA_API_TOKEN=
+    ETH_TEST_PRIVATE_KEY=
+    
+    # First bonder
+    BOND_NAME=
+    PACT_PRIVATE_KEY=
+    
+    # Second bonder
+    BOND_NAME_2=
+    PACT_PRIVATE_KEY_2=
+    ```
 
-# First bonder
-BOND_NAME=
-PACT_PRIVATE_KEY=
+2.  Run tests
 
-# Second bonder
-BOND_NAME_2=
-PACT_PRIVATE_KEY_2=
-```
+    b.  via npm
 
-2. Build docker containers
+        ```
+        npm test:app-test
+        ```
 
-```sh
-docker compose build
-```
+    a.  via docker
 
-3. Run tests
-
-```sh
-docker compose --env-file .env.test up
-```
+        ```sh
+        docker compose -f app-test/docker-compose.yaml --env-file=./app-test/.env up --build
+        ```
