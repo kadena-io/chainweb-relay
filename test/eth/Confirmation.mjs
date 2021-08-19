@@ -23,7 +23,7 @@ export class ConsoleLogger {
 /* ************************************************************************** */
 /* Test Utils */
 
-const timeout = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const xor = (a,b) => a ? !b : b;
 
@@ -50,7 +50,7 @@ async function advanceBlocks(n) {
 
 describe("test setup", () => {
   test("web3 version", () => {
-    expect(web3.version).toBe("1.5.1");
+    expect(web3.version).toBe("1.5.2");
   });
   test("initial block number is 0", async () => {
     await expect(web3.eth.getBlockNumber()).resolves.toBe(0);
@@ -69,16 +69,16 @@ describe("recent", () => {
   test("recent returns new block number after at most 1s", async () => {
     const c = await web3.eth.getBlockNumber();
     await advanceBlock(); // 1
-    await timeout(1000);
+    await sleep(1000);
     await expect(confirmation.recent()).resolves.toBe(c+1);
   }, 1100);
 
   test("rate of updates is 1s", async () => {
     const c = await web3.eth.getBlockNumber();
     const r0 = confirmation.recent();
-    await timeout(500);
+    await sleep(500);
     const r1 = confirmation.recent();
-    await timeout(500);
+    await sleep(500);
     const r2 = confirmation.recent();
     expect(xor(r0 === r1, r1 === r2)).toBe(true);
     expect(r0).resolves.toBe(c);
@@ -90,10 +90,10 @@ describe("recent", () => {
     const c = await web3.eth.getBlockNumber();
     const r0 = await confirmation.recent();
     await advanceBlock(); // 2
-    await timeout(500);
+    await sleep(500);
     const r1 = await confirmation.recent();
     await advanceBlock(); // 3
-    await timeout(500);
+    await sleep(500);
     const r2 = await confirmation.recent();
     expect(xor(r0 === r1, r1 === r2)).toBe(true);
     expect(r2).toBeGreaterThan(c);
@@ -131,7 +131,7 @@ describe("confirmedBlock", () => {
     // let some time pass so that recent() will trigger an update.
     // (alternatively we could advance the chain after inserting it into the subscription)
     // TODO add another test for that
-    await timeout(1000);
+    await sleep(1000);
     const c = await web3.eth.getBlockNumber();
     const b = confirmation.confirmedBlock(c, 0);
     await expect(b).resolves.toMatchObject({number: c});
@@ -146,27 +146,27 @@ describe("confirmedBlock", () => {
 
     const c = await web3.eth.getBlockNumber();
     const b = confirmation.confirmedBlock(c, 0);
-    await timeout(100); // give the subscription some time to start and guarantee that the next block is captured
+    await sleep(100); // give the subscription some time to start and guarantee that the next block is captured
     await advanceBlock();
     await expect(b).resolves.toMatchObject({number: c});
   });
 
   test("confirmedBlock at depth 1", async () => {
-    await timeout(1000);
+    await sleep(1000);
     const c = await web3.eth.getBlockNumber();
     const b = confirmation.confirmedBlock(c, 1);
-    await timeout(100); // give the subscription some time to start and guarantee that the next block is captured
+    await sleep(100); // give the subscription some time to start and guarantee that the next block is captured
     await advanceBlock();
     await expect(b).resolves.toMatchObject({number: c});
     await expect(web3.eth.getBlockNumber()).resolves.toBe(c+1);
   });
 
   test("confirmedBlock at depth 1 and 2", async () => {
-    await timeout(1000);
+    await sleep(1000);
     const c = await web3.eth.getBlockNumber();
     const p2 = confirmation.confirmedBlock(c,2);
     const p1 = confirmation.confirmedBlock(c,1);
-    await timeout(200); // give the subscription some time to start and guarantee that the next block is captured
+    await sleep(200); // give the subscription some time to start and guarantee that the next block is captured
     await advanceBlock();
     await advanceBlock();
     await expect(p1).resolves.toMatchObject({number: c}),

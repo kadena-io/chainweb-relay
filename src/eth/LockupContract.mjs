@@ -64,11 +64,14 @@ export default class LockupContract {
     this.contract = new this.web3.eth.Contract(erc20TransferABI, this.contractAddress);
   }
 
-  // For debugging
-  lockupEventsOnce (cb) {
-    this.scontract.once('Transfer', {
-      filter: { "_to" : this.lockupAccountPk }
-    }, cb);
+  /* Expect a single lockup event
+   */
+  lockupEventsOnce () {
+    return new Promise((resolve, reject) => {
+      this.contract.once('Transfer', {
+        filter: { "_to" : this.lockupAccountPk }
+      }, (err, e) => err ? reject(err) : resolve(e));
+    });
   }
 
   /* Lockup Events Emitter for a contract and a lockup accont
