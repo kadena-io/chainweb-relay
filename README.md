@@ -34,8 +34,8 @@ Rotating can be achieved by
 ## Quick Start
 
 ```sh
-npm install --global chainweb-relay
-INFURA_API_TOKEN=... BOND_NAME=... PACT_PRIVATE_KEY=... chainweb-relay
+npm install --global kadena/relay-app
+INFURA_API_TOKEN=... BOND_NAME=... PACT_PRIVATE_KEY=... kadena/relay-app
 ```
 
 Run with Docker:
