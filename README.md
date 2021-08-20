@@ -3,12 +3,12 @@
 ## What is it?
 
 This is a small server application to power Kadena bridges. The first iteration
-supports bridging transactions from Ethereum. 
+supports bridging transactions from Ethereum.
 
 The application can:
 - Listen to Ethereum token contracts for transfers into a designated "locker" address.
 - For selected transfers, retreive header information from Ethereum in order to "propose" it to the relay smart contract on Kadena
-- Respond to proposals to validate headers by quering Ethereum and asserting they match. 
+- Respond to proposals to validate headers by quering Ethereum and asserting they match.
 
 ## Who needs it?
 
@@ -27,15 +27,15 @@ A given instance of the software runs for a single bond, and must be configured 
 Bonders who have purchased bonds on relay.chainweb.com using their KDA public key should NOT expose their public key to this software.
 Instead, bonders should **rotate their bond to a dedicated keypair just for bond administration** as this will protect their KDA account.
 
-Rotating can be achieved by 
+Rotating can be achieved by
 1. Generating a keypair
 2. Using the "rotate bond" button on relay.chainweb.com for the appropriate bond.
 
 ## Quick Start
 
 ```sh
-npm install --global kadena-relay-app
-INFURA_API_TOKEN=... BOND_NAME=... PACT_PRIVATE_KEY=... relay-app
+npm install --global chainweb-relay
+INFURA_API_TOKEN=... BOND_NAME=... PACT_PRIVATE_KEY=... chainweb-relay
 ```
 
 Run with Docker:
@@ -151,11 +151,11 @@ docker run -e INFURA_API_TOKEN=... -e ETH_TEST_PRIVATE_KEY=... lockup-transfers
     ```
     INFURA_API_TOKEN=
     ETH_TEST_PRIVATE_KEY=
-    
+
     # First bonder
     BOND_NAME=
     PACT_PRIVATE_KEY=
-    
+
     # Second bonder
     BOND_NAME_2=
     PACT_PRIVATE_KEY_2=
