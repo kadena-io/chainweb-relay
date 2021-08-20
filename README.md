@@ -61,7 +61,7 @@ Default environment:
 
 Required settings for relay-app:
 
-*   `INFURA_API_TOKEN`: api token for connecting to Infura servers
+*   `INFURA_API_TOKEN`: api token for connecting to Infura servers - the project ID of infura projects.
 *   `BOND_NAME`: the bond name as seen in relay.chainweb.com
 *   `PACT_PRIVATE_KEY`: the private key for administering the bond, as described above in "Rotating the bond key" section.
 
@@ -134,7 +134,7 @@ Required settings for testing with lockup transfers for Test Standard Token (TST
 *   `ETH_TEST_PRIVATE_KEY`
 
 ```sh
-npm start:test-lockups
+npm run start:test-lockups
 ```
 
 or via docker as
@@ -163,13 +163,13 @@ docker run -e INFURA_API_TOKEN=... -e ETH_TEST_PRIVATE_KEY=... lockup-transfers
 
 2.  Run tests
 
-    b.  via npm
+    a.  via npm
 
         ```
-        npm test:app-test
+        npm run app-test
         ```
 
-    a.  via docker
+    b.  via docker
 
         ```sh
         docker compose -f app-test/docker-compose.yaml --env-file=./app-test/.env up --build
