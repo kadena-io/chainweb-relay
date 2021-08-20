@@ -1,48 +1,11 @@
-import Web3 from 'web3';
-import ganache from "ganache-core";
 import Confirmation from "../../src/eth/Confirmation.mjs";
+import { web3, advanceBlock } from "../utils/web3.mjs";
+import { sleep, xor } from "../utils/misc.mjs";
 
 /* ************************************************************************** */
-/* Test setup */
+/* Test Setup */
 
-const web3 = new Web3(ganache.provider());
 const confirmation = new Confirmation(web3);
-
-/* ************************************************************************** */
-/* Test Logger */
-
-export class ConsoleLogger {
-  constructor(opts) { this.topic = opts?.topic ?? ""; }
-  child (opts) { return new ConsoleLogger(opts); }
-  debug (msg) { console.debug(this.topic, msg); }
-  info (msg) { console.info(this.topic, msg); }
-  warn (msg) { console.warn(this.topic, msg); }
-  error (msg) { console.error(this.topic, msg); }
-}
-
-/* ************************************************************************** */
-/* Test Utils */
-
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const xor = (a,b) => a ? !b : b;
-
-function advanceBlock() {
-  return new Promise((resolve, reject) => {
-    const arg = {
-      jsonrpc: '2.0',
-      method: 'evm_mine',
-      id: new Date().getTime(),
-    }
-    web3.currentProvider.send(arg, (err, res) => err ? reject(err) : resolve(res));
-  });
-};
-
-async function advanceBlocks(n) {
-  for (let i = 0; i < n; ++i) {
-    await advanceBlock();
-  }
-}
 
 /* ************************************************************************** */
 /* Tests */
@@ -106,7 +69,7 @@ describe("isConfirmed", () => {
 
   beforeAll(async () => {
     const c = await web3.eth.getBlockNumber();
-    await advanceBlocks(5); // 8
+    await advanceBlock(5); // 8
   });
 
   test("recent is confirmed at depth 0", async () => {

@@ -1,117 +1,21 @@
-import Web3 from 'web3';
+import createTestToken from "../utils/test-token.mjs"
+import { web3, advanceBlock, accounts } from "../utils/web3.mjs";
 import LockupContract from "../../src/eth/LockupContract.mjs";
-
-/* ************************************************************************** */
-/* Test Utils */
-
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const timeout = (ms, p) => {
-    return Promise.race([
-      sleep(ms).then(() => { throw new Error(`Timeout: promised rejected after ${ms}ms`) }),
-      p
-    ]);
-};
-
-/* ************************************************************************** */
-/* Initialize Ganache Web3 Provider */
-
-// I would prefer to just use hardhat, but it doesn't currently support 
-// subscriptions because of a bug.
-
-import ganache from "ganache-core";
-
-/* ************************************************************************** */
-/* Initialize HardHat */
-
-// Hardhat has a bug that prevents subscriptions from working. I also was
-// not able to get hardhat-ganache to work.
-//
-// So, for now, we use harthad only for compilation. We use ganache-core for
-// everything else (via ganache.provider()).
-
-import hre from "hardhat";
-
-async function compileTestToken() {
-  console.debug("compiling TestToken...");
-  await hre.run("compile");
-  console.debug("...compiled TestToken");
-}
-
-/* ************************************************************************** */
-/* Web3 */
-
-const web3 = new Web3(ganache.provider());
-// const web3 = hre.web3;
-const accounts = await web3.eth.getAccounts();
-
-function advanceBlock() {
-  return new Promise((resolve, reject) => {
-    const arg = {
-      jsonrpc: '2.0',
-      method: 'evm_mine',
-      id: new Date().getTime(),
-    }
-    web3.currentProvider.send(arg, (err, res) => err ? reject(err) : resolve(res));
-  });
-};
-
-/* ************************************************************************** */
-/* Deploy Test Token */
-
-async function deployTestToken() {
-
-  await compileTestToken();
-  console.debug("deploying TestToken...");
-  const arts = await hre.artifacts.readArtifact("TestToken");
-
-  const factory = new web3.eth.Contract(arts.abi, { from: accounts[0]});
-  const transaction = factory.deploy({ 
-    from: accounts[0],
-    data: arts.bytecode 
-  });
-
-  const pending = transaction.send({
-    // from: accounts[0],
-    gas: 1500000,
-    gasPrice: '30000000000000'
-  });
-  const contract = await pending;
-  console.debug("...deployed TestToken")
-  return pending;
-}
+import { timeout } from "../utils/misc.mjs";
 
 /* ************************************************************************** */
 /* Test Setup */
 
 let lockupAddress;
-let contract;
+let tt;
 
 beforeAll(async () => {
-  web3.eth.Contract.defaultAccount = accounts[0];
   lockupAddress = accounts[1];
-
-  contract = await deployTestToken();
-  contract.defaultAccount = accounts[0];
-
-  // fund accounts with TT
-  for (const r of accounts) {
-    await contract.methods.mint(r, 1000).send();
-  }
+  tt = await createTestToken(web3);
   await advanceBlock();
 });
 
-async function transfer(to, value) {
-  return await contract.methods.transfer(to, value).send();
-}
-
-async function doLockup(value) {
-  return await transfer(lockupAddress, value ?? 1);
-}
-
-async function balanceOf(addr) {
-  return await contract.methods.balanceOf(addr).call().then(x => BigInt(x));
-}
+const doLockup = async () => tt.transfer(lockupAddress, 1);
 
 /* ************************************************************************** */
 /* Tests */
@@ -129,7 +33,7 @@ describe("test environment", () => {
     await expect(web3.eth.getBlockNumber()).resolves.toBe(c + 1);
   });
   test("contract is available", async () => {
-    expect(contract.options.address).toBeTruthy();
+    expect(tt.address).toBeTruthy();
     expect(lockupAddress).toBeTruthy();
   });
   test("accounts are funded with ether", async () => {
@@ -143,27 +47,27 @@ describe("test environment", () => {
   });
   test("accounts are funded with TT", async () => {
     for (const a of accounts) {
-      await expect(balanceOf(a)).resolves.toBe(1000n);
+      await expect(tt.balanceOf(a)).resolves.toBe(10000n);
     }
   });
   test("accounts can transfer TT", async () => {
     const sender = accounts[0];
     const receiver = accounts[1];
-    await transfer(receiver, 1);
-    await expect(balanceOf(sender)).resolves.toBe(999n);
-    await expect(balanceOf(receiver)).resolves.toBe(1001n);
+    await tt.transfer(receiver, 1);
+    await expect(tt.balanceOf(sender)).resolves.toBe(9999n);
+    await expect(tt.balanceOf(receiver)).resolves.toBe(10001n);
   });
 });
 
 describe("LockupContract", () => {
   test("constructor", async () => {
-    const lockup = new LockupContract(web3, contract.options.address, lockupAddress);
+    const lockup = new LockupContract(web3, tt.address, lockupAddress);
     expect(lockup).toBeTruthy();
   });
 
   test("lockupEventsOnce", async () => {
     let done = false;
-    const lockup = new LockupContract(web3, contract.options.address, lockupAddress);
+    const lockup = new LockupContract(web3, tt.address, lockupAddress);
     const p = lockup.lockupEventsOnce();
     p.then(() => done = true);
     expect(done).toBe(false);
@@ -173,15 +77,15 @@ describe("LockupContract", () => {
   });
 
   test("lockupEventsOnce to wrong account doesn't trigger", async () => {
-    const lockup = new LockupContract(web3, contract.options.address, lockupAddress);
+    const lockup = new LockupContract(web3, tt.address, lockupAddress);
     const p = lockup.lockupEventsOnce();
-    await transfer(accounts[2], 1);
+    await tt.transfer(accounts[2], 1);
     await expect(timeout(100, lockup.lockupEventsOnce())).rejects.toThrowError(/Timeout/);
   });
 
   test("lockupEvents", async () => {
     let n = 4;
-    const lockup = new LockupContract(web3, contract.options.address, lockupAddress);
+    const lockup = new LockupContract(web3, tt.address, lockupAddress);
     const events = lockup.lockupEvents();
 
     let result = new Promise((resolve, reject) => {
