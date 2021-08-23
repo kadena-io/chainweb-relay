@@ -35,7 +35,7 @@ Rotating can be achieved by
 
 ```sh
 npm install --global @kadena/relay-app
-INFURA_API_TOKEN=... BOND_NAME=... PACT_PRIVATE_KEY=... @kadena/relay-app
+INFURA_API_TOKEN=... BOND_NAME=... PACT_PRIVATE_KEY=... relay-app
 ```
 
 Run with Docker:
