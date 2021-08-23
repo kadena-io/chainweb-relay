@@ -116,7 +116,7 @@ const pactTestnet = {
   BOND_NAME: undefined,
   PACT_NETWORK_ID: 'testnet04',
   PACT_SERVER: 'api.testnet.chainweb.com',
-  PACT_CHAIN_ID: "0",
+  PACT_CHAIN_ID: "1",
   PACT_MODULE: "relay.relay",
   PACT_POOL_MODULE: "relay.pool",
   PACT_RELAY_GAS_STATION: "relay.gas-station",
