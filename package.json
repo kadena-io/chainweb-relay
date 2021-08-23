@@ -1,5 +1,5 @@
 {
-  "name": "chainweb-relay",
+  "name": "@kadena/relay-app",
   "version": "1.0.0",
   "description": "Chainweb Relay Service",
   "main": "src/Main.mjs",
@@ -26,5 +26,16 @@
     "ganache-core": "^2.13.2",
     "hardhat": "^2.6.1",
     "jest": "^27.0.6"
-  }
+  },
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kadena-io/chainweb-relay.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kadena-io/chainweb-relay/issues"
+  },
+  "homepage": "https://github.com/kadena-io/chainweb-relay#readme"
 }
