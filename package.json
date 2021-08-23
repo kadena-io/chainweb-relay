@@ -1,5 +1,5 @@
 {
-  "name": "@kadena/chainweb-relay",
+  "name": "@kadena/relay-app",
   "version": "1.0.0",
   "description": "Chainweb Relay Service",
   "main": "src/Main.mjs",
