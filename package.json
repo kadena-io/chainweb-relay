@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Chainweb Relay Service",
   "main": "src/Main.mjs",
+  "bin": "src/Main.mjs",
   "scripts": {
     "start": "node src/Main.mjs",
     "start:test-lockups": "node app-test/RunLockups.mjs",

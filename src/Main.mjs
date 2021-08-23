@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import Pino from "pino";
 import { initWeb3 } from "./eth/Utils.mjs";
 import Confirmation from "./eth/Confirmation.mjs";
