@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import config from "../Config.mjs";
 import * as t from "./Tst.mjs";
 

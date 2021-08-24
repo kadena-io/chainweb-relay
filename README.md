@@ -35,7 +35,7 @@ Rotating can be achieved by
 
 ```sh
 npm install --global @kadena/relay-app
-INFURA_API_TOKEN=... BOND_NAME=... PACT_PRIVATE_KEY=... @kadena/relay-app
+INFURA_API_TOKEN=... BOND_NAME=... PACT_PRIVATE_KEY=... relay-app
 ```
 
 Run with Docker:
@@ -134,7 +134,8 @@ Required settings for testing with lockup transfers for Test Standard Token (TST
 *   `ETH_TEST_PRIVATE_KEY`
 
 ```sh
-npm run start:test-lockups
+npm install --global @kadena/relay-app
+INFURA_API_TOKEN=... ETH_TEST_PRIVATE_KEY=... lockup-transfers
 ```
 
 or via docker as
