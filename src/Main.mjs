@@ -33,6 +33,7 @@ const appInfo = () => {
     logger.info(`ETH lockup account: ${config.ETH_LOCKUP_PUBLIC_KEY}`);
     logger.info(`Bonder public key: ${relay.bonder.keyPair.publicKey}`);
     logger.info(`Bond name: ${relay.bonder.name}`);
+    logger.info(`PACT CHAIN ID: ${config.PACT_CHAIN_ID}`);
 }
 
 /* ************************************************************************** */
@@ -42,7 +43,7 @@ const web3 = initWeb3(logger);
 const confirmation = new Confirmation(web3);
 
 web3.currentProvider.errored_.then(e => {
-  logger.error("web3 provider failed", e);
+  logger.error(e, "web3 provider failed");
   process.exit(1);
 });
 
@@ -55,20 +56,21 @@ const main = async () => {
     await relay.checkBond()
   } catch (e) {
     if (e.result) {
-      logger.error("FAILURE! Check your key or the bond name: ", e.result.error.message)
+      logger.error(e.result.error, "FAILURE! Check your key or the bond name")
+      logger.info(e);
     } else {
       logger.error(e);
     }
-    throw e;
+    process.exit(1);
   };
 
   await Promise.race([
       web3.currentProvider.connected_,
       web3.currentProvider.errored_.then(async e => {
         const msg = "Failed to initialize web3. Most likely the Ethereum JSON RPC Provider URL was not configured. The easiest way to do so is to provide an Infura API token as environment variable INFURA_API_TOKEN.";
-        console.error(msg, e);
+        console.error(e, msg);
         await web3.currentProvider.closed_;
-        throw e;
+        process.exit(1);
       }),
   ]);
 
@@ -77,6 +79,7 @@ const main = async () => {
     relay.endorsement(endorseLogger, confirmation);
   } catch(e){
     logger.error(e);
+    process.exit(1);
   }
 }
 
