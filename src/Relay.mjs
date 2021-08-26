@@ -21,9 +21,7 @@ const bonder = {
 /* ************************************************************************** */
 /* Proposals */
 
-const depth = config.ETH_CONFIRMATION_DEPTH;
-
-const eventToProposal = async (confirmation, e) => {
+const eventToProposal = async (confirmation, depth e) => {
   const block = await confirmation.confirmedBlock (e.blockNumber, depth, e.blockHash);
   if (block) {
     return {
@@ -51,8 +49,9 @@ const proposals = (logger, web3, confirmation) => {
       logg.debug({ current: current }, "skip non-current event");
     } else {
       current = d.blockNumber;
+      const depth = Math.Min(2, Math.round(config.ETH_CONFIRMATION_DEPTH / 2));
       logg.debug(`awaiting confirmation depth ${depth} for lockup event at height ${current}`);
-      const p = await eventToProposal(confirmation, d);
+      const p = await eventToProposal(confirmation, depth, d);
       const s = delay(d.blockHash);
       logg.debug(`waiting ${s}s`);
       await timeout(s * 1000);
@@ -136,7 +135,8 @@ const processEndorseEvent = async (logger, confirmation, e) => {
   logger.debug({event: e.params[1]}, "Chainweb propose event");
   const d = {blockNumber: e.params[0].int, blockHash: e.params[1]};
   const logg = logger.child({ blockNumber: d.blockNumber, blockHash: d.blockHash })
-  let blockHeader = await eventToProposal(confirmation, d);
+  const depth = config.ETH_CONFIRMATION_DEPTH;
+  let blockHeader = await eventToProposal(confirmation, depth, d);
   logg.info("new endorsement");
   try {
     submitEndorse(logg, blockHeader);
@@ -242,8 +242,8 @@ let delay = (blockHash) => {
   const increment = 30; // seconds
   const jitter = Math.random() * 0.5 + 0.75; // [0.75, 1.25]
 
-  const pk = Pact.crypto.hexToBin(bonder.keyPair.publicKey);
-  const hash = Pact.crypto.hexToBin(blockHash.substr(2));
+  const pk = new Uint32Array(Pact.crypto.hexToBin(bonder.keyPair.publicKey.substring(2,10)).buffer);
+  const hash = new Uint32Array(Pact.crypto.hexToBin(blockHash.substring(2,10)).buffer);
   const p = Math.clz32(pk[0] ^ hash[0]);
 
   return Math.max(0, (relevantBits - p)) * increment * jitter;
