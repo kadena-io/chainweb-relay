@@ -13,11 +13,11 @@ const objMap = (obj, f) =>
 /* Creation time for a transaction */
 const creationTime = () => Math.round((new Date).getTime()/1000)-180
 
-const meta = (sender) => pact.lang.mkMeta(
+const meta = (sender, gasLimit) => pact.lang.mkMeta(
   sender ?? "",
   config.PACT_CHAIN_ID,
   config.PACT_GAS_PRICE,
-  config.PACT_GAS_LIMIT,
+  gasLimit ?? config.PACT_GAS_LIMIT,
   creationTime(),
   config.PACT_TTL
 );
@@ -133,7 +133,7 @@ async function wait(ms = 1000) {
  * The resulting cmd Object does not contain 'pactCode'.
  *
  */
-const mkCmd = (keyPair, sender) => {
+const mkCmd = (keyPair, sender, gasLimit) => {
   if (!keyPair) {
     keyPair = pact.crypto.genKeyPair();
   }
@@ -144,7 +144,7 @@ const mkCmd = (keyPair, sender) => {
         secretKey: keyPair.secretKey,
       }
     ],
-    meta: meta(sender),
+    meta: meta(sender, gasLimit),
     networkId: config.PACT_NETWORK_ID,
   };
 };
@@ -272,7 +272,7 @@ const relayRenewBond = async (keyPair, bond, local) => {
  * Propose a header to the relay.
  */
 const relayPropose = async (keyPair, bond, proposal, local) => {
-  const cmd = mkCmd(keyPair, RELAY_GAS_STATION_ACCOUNT);
+  const cmd = mkCmd(keyPair, RELAY_GAS_STATION_ACCOUNT, config.PACT_PROPOSE_GAS_LIMIT);
   cmd.envData = {
     header: {
       hash: proposal.hash,
@@ -298,7 +298,7 @@ const relayPropose = async (keyPair, bond, proposal, local) => {
  * Endorse a header to the relay.
  */
 const relayEndorse = async (keyPair, bond, proposal, local) => {
-  const cmd = mkCmd(keyPair, RELAY_GAS_STATION_ACCOUNT);
+  const cmd = mkCmd(keyPair, RELAY_GAS_STATION_ACCOUNT, config.PACT_ENDORSE_GAS_LIMIT);
   cmd.envData = {
     header: {
       hash: proposal.hash,
