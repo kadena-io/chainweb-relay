@@ -55,7 +55,7 @@ const ethKovan = {
   ETH_TEST_PRIVATE_KEY: undefined,
   ETH_LOCKUP_PUBLIC_KEY: '0xc7eBC02Ec03d33716FB47b6702498B6C3dEBa83e',
   ETH_LOCKUP_PRIVATE_KEY: undefined,
-  ETH_CONFIRMATION_DEPTH: 4,
+  ETH_CONFIRMATION_DEPTH: 15,
 }
 
 /* Ethereum Ropsten */
@@ -71,7 +71,7 @@ const ethRopsten = {
   ETH_TEST_PRIVATE_KEY: undefined,
   ETH_LOCKUP_PUBLIC_KEY: undefined,
   ETH_LOCKUP_PRIVATE_KEY: undefined,
-  ETH_CONFIRMATION_DEPTH: 4,
+  ETH_CONFIRMATION_DEPTH: 10,
 }
 
 /* Mainnet */
