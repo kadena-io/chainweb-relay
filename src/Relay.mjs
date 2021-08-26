@@ -49,7 +49,7 @@ const proposals = (logger, web3, confirmation) => {
       logg.debug({ current: current }, "skip non-current event");
     } else {
       current = d.blockNumber;
-      const depth = Math.Min(2, Math.round(config.ETH_CONFIRMATION_DEPTH / 2));
+      const depth = Math.min(2, Math.round(config.ETH_CONFIRMATION_DEPTH / 2));
       logg.debug(`awaiting confirmation depth ${depth} for lockup event at height ${current}`);
       const p = await eventToProposal(confirmation, depth, d);
       const s = delay(d.blockHash);
@@ -258,4 +258,3 @@ export {
   checkBond,
   bonder,
 }
-
