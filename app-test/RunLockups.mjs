@@ -4,7 +4,7 @@ import * as t from "./Tst.mjs";
 
 const lockupAddress = config.ETH_LOCKUP_PUBLIC_KEY;
 
-const INTERVAL=30000;
+const INTERVAL=120000;
 
 // TODO add retry logic
 const lockup = () => t.methods.transfer(lockupAddress, 1)
