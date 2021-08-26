@@ -97,7 +97,7 @@ const pactDevnet = {
   PACT_PRIVATE_KEY: pact.crypto.genKeyPair().secretKey,
   BOND_NAME: 'TestBonder:0',
   PACT_NETWORK_ID: 'development',
-  PACT_SERVER: 'localhost:8080',
+  PACT_SERVER: 'http://devnet-api',
   PACT_CHAIN_ID: "0",
   PACT_MODULE: "relay.relay",
   PACT_POOL_MODULE: "relay.pool",
@@ -115,7 +115,7 @@ const pactTestnet = {
   PACT_PRIVATE_KEY: undefined,
   BOND_NAME: undefined,
   PACT_NETWORK_ID: 'testnet04',
-  PACT_SERVER: 'api.testnet.chainweb.com',
+  PACT_SERVER: 'https://api.testnet.chainweb.com',
   PACT_CHAIN_ID: "1",
   PACT_MODULE: "relay.relay",
   PACT_POOL_MODULE: "relay.pool",
@@ -133,7 +133,7 @@ const pactMainnet = {
   BOND_NAME: undefined,
   PACT_PRIVATE_KEY: undefined,
   PACT_NETWORK_ID: 'mainnet01',
-  PACT_SERVER: 'api.chainweb.com',
+  PACT_SERVER: 'https://api.chainweb.com',
   PACT_CHAIN_ID: undefined,
   PACT_MODULE: undefined,
   PACT_POOL_MODULE: undefined,
@@ -224,7 +224,7 @@ config.PACT_RELAY_GAS_STATION = process.env.PACT_RELAY_GAS_STATION || defaultCon
 config.PACT_POOL_MODULE = process.env.PACT_POOL_MODULE || defaultConfig.PACT_POOL_MODULE;
 config.PACT_URL = process.env.PACT_URL
   || defaultConfig.PACT_URL
-  || `https://${config.PACT_SERVER}/chainweb/0.0/${config.PACT_NETWORK_ID}/chain/${config.PACT_CHAIN_ID}/pact`;
+  || `${config.PACT_SERVER}/chainweb/0.0/${config.PACT_NETWORK_ID}/chain/${config.PACT_CHAIN_ID}/pact`;
 
 config.PACT_TTL = process.env.PACT_TTL || defaultConfig.PACT_TTL;
 config.PACT_GAS_PRICE = process.env.PACT_GAS_PRICE || defaultConfig.PACT_GAS_PRICE;
