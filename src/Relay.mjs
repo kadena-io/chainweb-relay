@@ -21,7 +21,7 @@ const bonder = {
 /* ************************************************************************** */
 /* Proposals */
 
-const eventToProposal = async (confirmation, depth e) => {
+const eventToProposal = async (confirmation, depth, e) => {
   const block = await confirmation.confirmedBlock (e.blockNumber, depth, e.blockHash);
   if (block) {
     return {
