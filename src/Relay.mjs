@@ -245,7 +245,7 @@ let delay = (blockHash) => {
   const pk = new Uint32Array(Pact.crypto.hexToBin(bonder.keyPair.publicKey.substring(0,8)).buffer);
   const hash = new Uint32Array(Pact.crypto.hexToBin(blockHash.substring(2,10)).buffer);
   const p = Math.clz32(((pk[0] ^ hash[0]) * 68718952447) % 2**(32-1));
-  console.log(pk, hash, (((pk[0] ^ hash[0]) * 68718952447) % 2**(32-1)), p, jitter)
+  // console.log(pk, hash, (((pk[0] ^ hash[0]) * 68718952447) % 2**(32-1)), p, jitter)
 
   return Math.max(0, Math.max(0, (relevantBits - p)) * increment + jitter);
 }
