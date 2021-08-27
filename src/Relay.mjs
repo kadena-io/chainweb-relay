@@ -238,15 +238,16 @@ const checkBond = async () => {
  * delay in seconds
  */
 let delay = (blockHash) => {
-  const relevantBits = 4; // 1 out of 16
-  const increment = 30; // seconds
-  const jitter = Math.random() * 0.5 + 0.75; // [0.75, 1.25]
+  const relevantBits = 5; // 1 out of 16
+  const increment = 45; // seconds
+  const jitter = increment * (Math.random() * 0.6 - 0.3); // increment * [-0.3, 0.3]
 
-  const pk = new Uint32Array(Pact.crypto.hexToBin(bonder.keyPair.publicKey.substring(2,10)).buffer);
+  const pk = new Uint32Array(Pact.crypto.hexToBin(bonder.keyPair.publicKey.substring(0,8)).buffer);
   const hash = new Uint32Array(Pact.crypto.hexToBin(blockHash.substring(2,10)).buffer);
-  const p = Math.clz32(pk[0] ^ hash[0]);
+  const p = Math.clz32(((pk[0] ^ hash[0]) * 68718952447) % 2**(32-1));
+  // console.log(pk, hash, (((pk[0] ^ hash[0]) * 68718952447) % 2**(32-1)), p, jitter)
 
-  return Math.max(0, (relevantBits - p)) * increment * jitter;
+  return Math.max(0, Math.max(0, (relevantBits - p)) * increment + jitter);
 }
 
 /* ************************************************************************** */
@@ -257,4 +258,6 @@ export {
   endorsement,
   checkBond,
   bonder,
+  // for testing:
+  delay,
 }
