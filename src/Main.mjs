@@ -6,6 +6,13 @@ import * as relay from "./Relay.mjs";
 import config from "../Config.mjs";
 
 /* ************************************************************************** */
+/* Load version from package.json files */
+
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const {version} = require("../package.json");
+
+/* ************************************************************************** */
 /* Logging */
 
 // in production set `{level: warn, prettyPrint: false}`
@@ -27,6 +34,7 @@ process.on('SIGINT', () => {
 
 const appInfo = () => {
     logger.info("Starting Relay App");
+    logger.info(`version: ${version}`);
     logger.info(`ETH API URI: ${config.ETH_URL}`);
     logger.info(`Pact API URI: ${config.PACT_URL}`);
     logger.info(`ETH contract: ${config.ETH_CONTRACT_ADDR}`);
@@ -51,6 +59,13 @@ web3.currentProvider.errored_.then(e => {
 /* Main */
 
 const main = async () => {
+
+  if (process.argv.indexOf('--version') > -1) {
+    console.log(`@kadena/relay-app: ${version}`);
+    process.exit(0);
+  }
+
+  appInfo();
 
   try {
     await relay.checkBond()
@@ -83,6 +98,5 @@ const main = async () => {
   }
 }
 
-appInfo();
 main();
 
