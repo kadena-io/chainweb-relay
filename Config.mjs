@@ -105,7 +105,7 @@ const pactDevnet = {
   PACT_TTL: 1200,
   PACT_GAS_PRICE: 0.000000000001,
   PACT_GAS_LIMIT: 4000,
-  PACT_ENDORSE_GAS_LIMIT: 700,
+  PACT_ENDORSE_GAS_LIMIT: 1500,
   PACT_PROPOSE_GAS_LIMIT: 10000,
   PACT_HIGH_GAS_LIMIT: 60000,
   PACT_HIGH_GAS_PRICE: 0.00000001,
@@ -125,7 +125,7 @@ const pactTestnet = {
   PACT_TTL: 1200,
   PACT_GAS_PRICE: 0.000000000001,
   PACT_GAS_LIMIT: 4000,
-  PACT_ENDORSE_GAS_LIMIT: 700,
+  PACT_ENDORSE_GAS_LIMIT: 1500,
   PACT_PROPOSE_GAS_LIMIT: 10000,
   PACT_HIGH_GAS_LIMIT: 60000,
   PACT_HIGH_GAS_PRICE: 0.00000001,
@@ -145,7 +145,7 @@ const pactMainnet = {
   PACT_TTL: 1200,
   PACT_GAS_PRICE: 0.000000000001,
   PACT_GAS_LIMIT: 4000,
-  PACT_ENDORSE_GAS_LIMIT: 700,
+  PACT_ENDORSE_GAS_LIMIT: 1500,
   PACT_PROPOSE_GAS_LIMIT: 10000,
   PACT_HIGH_GAS_LIMIT: 60000,
   PACT_HIGH_GAS_PRICE: 0.00000001,
@@ -215,7 +215,7 @@ config.ETH_TEST_PUBLIC_KEY = process.env.ETH_TEST_PUBLIC_KEY || defaultConfig.ET
 config.ETH_TEST_PRIVATE_KEY = process.env.ETH_TEST_PRIVATE_KEY || defaultConfig.ETH_TEST_PRIVATE_KEY;
 config.ETH_LOCKUP_PUBLIC_KEY = process.env.ETH_LOCKUP_PUBLIC_KEY || defaultConfig.ETH_LOCKUP_PUBLIC_KEY;
 config.ETH_LOCKUP_PRIVATE_KEY = process.env.ETH_LOCKUP_PRIVATE_KEY || defaultConfig.ETH_LOCKUP_PRIVATE_KEY;
-config.ETH_CONFIRMATION_DEPTH = process.env.ETH_CONFIRMATION_DEPTH || defaultConfig.ETH_CONFIRMATION_DEPTH;
+config.ETH_CONFIRMATION_DEPTH = Number(process.env.ETH_CONFIRMATION_DEPTH) || defaultConfig.ETH_CONFIRMATION_DEPTH;
 
 config.ETH_URL = process.env.ETH_URL
   || defaultConfig.ETH_URL
@@ -232,17 +232,17 @@ config.PACT_URL = process.env.PACT_URL
   || defaultConfig.PACT_URL
   || `${config.PACT_SERVER}/chainweb/0.0/${config.PACT_NETWORK_ID}/chain/${config.PACT_CHAIN_ID}/pact`;
 
-config.PACT_TTL = process.env.PACT_TTL || defaultConfig.PACT_TTL;
-config.PACT_GAS_PRICE = process.env.PACT_GAS_PRICE || defaultConfig.PACT_GAS_PRICE;
-config.PACT_GAS_LIMIT = process.env.PACT_GAS_LIMIT || defaultConfig.PACT_GAS_LIMIT;
-config.PACT_PROPOSE_GAS_LIMIT = process.env.PACT_PROPOSE_GAS_LIMIT || defaultConfig.PACT_PROPOSE_GAS_LIMIT;
-config.PACT_ENDORSE_GAS_LIMIT = process.env.PACT_ENDORSE_GAS_LIMIT || defaultConfig.PACT_ENDORSE_GAS_LIMIT;
-config.PACT_HIGH_GAS_LIMIT = process.env.PACT_HIGH_GAS_LIMIT || defaultConfig.PACT_HIGH_GAS_LIMIT;
-config.PACT_HIGH_GAS_PRICE = process.env.PACT_HIGH_GAS_PRICE || defaultConfig.PACT_HIGH_GAS_PRICE;
+config.PACT_TTL = Number(process.env.PACT_TTL) || defaultConfig.PACT_TTL;
+config.PACT_GAS_PRICE = Number(process.env.PACT_GAS_PRICE) || defaultConfig.PACT_GAS_PRICE;
+config.PACT_GAS_LIMIT = Number(process.env.PACT_GAS_LIMIT) || defaultConfig.PACT_GAS_LIMIT;
+config.PACT_PROPOSE_GAS_LIMIT = Number(process.env.PACT_PROPOSE_GAS_LIMIT) || defaultConfig.PACT_PROPOSE_GAS_LIMIT;
+config.PACT_ENDORSE_GAS_LIMIT = Number(process.env.PACT_ENDORSE_GAS_LIMIT) || defaultConfig.PACT_ENDORSE_GAS_LIMIT;
+config.PACT_HIGH_GAS_LIMIT = Number(process.env.PACT_HIGH_GAS_LIMIT) || defaultConfig.PACT_HIGH_GAS_LIMIT;
+config.PACT_HIGH_GAS_PRICE = Number(process.env.PACT_HIGH_GAS_PRICE) || defaultConfig.PACT_HIGH_GAS_PRICE;
 
 /* Pact Events*/
-config.PACT_RECENT_BLOCKS = process.env.PACT_RECENT_BLOCKS || defaultConfig.PACT_RECENT_BLOCKS;
-config.PACT_CONFIRM_DEPTH = process.env.PACT_CONFIRM_DEPTH || defaultConfig.PACT_CONFIRM_DEPTH;
+config.PACT_RECENT_BLOCKS = Number(process.env.PACT_RECENT_BLOCKS) || defaultConfig.PACT_RECENT_BLOCKS;
+config.PACT_CONFIRM_DEPTH = Number(process.env.PACT_CONFIRM_DEPTH) || defaultConfig.PACT_CONFIRM_DEPTH;
 
 /* ************************************************************************** */
 /* Export */
