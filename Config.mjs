@@ -231,6 +231,9 @@ config.PACT_POOL_MODULE = process.env.PACT_POOL_MODULE || defaultConfig.PACT_POO
 config.PACT_URL = process.env.PACT_URL
   || defaultConfig.PACT_URL
   || `${config.PACT_SERVER}/chainweb/0.0/${config.PACT_NETWORK_ID}/chain/${config.PACT_CHAIN_ID}/pact`;
+config.PACT_P2P_SERVER = process.env.PACT_P2P_SERVER
+  || defaultConfig.PACT_P2P_SERVER
+  || config.PACT_SERVER;
 
 config.PACT_TTL = Number(process.env.PACT_TTL) || defaultConfig.PACT_TTL;
 config.PACT_GAS_PRICE = Number(process.env.PACT_GAS_PRICE) || defaultConfig.PACT_GAS_PRICE;

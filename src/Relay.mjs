@@ -116,7 +116,7 @@ const endorsement = async (logger, confirmation) => {
       config.PACT_CONFIRM_DEPTH,
       config.PACT_RECENT_BLOCKS,
       config.PACT_NETWORK_ID,
-      config.PACT_SERVER
+      config.PACT_P2P_SERVER
   );
   const filteredEvents = recentEvents.filter(e => e.name === "PROPOSE" && e.params[3].includes(bonder.name));
   logger.info(filteredEvents.map(e => e.params[1]), `Chainweb Events to endorse in the last ${config.PACT_RECENT_BLOCKS} blocks`);
@@ -128,7 +128,7 @@ const endorsement = async (logger, confirmation) => {
       logger.debug(e, "Got PROPOSE event");
       processEndorseEvent(logger, confirmation, e);
     }
-  }, config.PACT_NETWORK_ID, config.PACT_SERVER)
+  }, config.PACT_NETWORK_ID, config.PACT_P2P_SERVER)
 }
 
 const processEndorseEvent = async (logger, confirmation, e) => {
