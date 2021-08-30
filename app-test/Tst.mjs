@@ -71,7 +71,7 @@ contract.options.from = testAccount.address;
 async function sendMethod(method) {
   const from = method._parent.defaultAccount;
   const nonce = await web3.eth.getTransactionCount(from, "pending");
-  const gas = Math.round(await method.estimateGas() * 1.5);
+  const gas = Math.round(await method.estimateGas() * 3);
   return method.send({gas: gas, nonce: nonce});
 }
 
@@ -81,7 +81,7 @@ async function sendMethod2(method) {
     to: method._parent._address,
     data: method.encodeABI(),
     nonce: await web3.eth.getTransactionCount(from, "pending"),
-    gas: Math.round(await method.estimateGas() * 1.5),
+    gas: Math.round(await method.estimateGas() * 3),
     gasLimit: (await web3.eth.getBlock("latest")).gasLimit
   }
 

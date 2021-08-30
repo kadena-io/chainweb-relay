@@ -6,9 +6,11 @@ const lockupAddress = config.ETH_LOCKUP_PUBLIC_KEY;
 
 const INTERVAL=120000;
 
+let i = 0;
+
 // TODO add retry logic
-const lockup = () => t.methods.transfer(lockupAddress, 1)
-    .then(() => console.log(`completed transfer: ${i++}`))
+const lockup = (c) => t.methods.transfer(lockupAddress, 1)
+    .then(() => console.log(`completed transfer: ${c}`))
     .catch(e => {
         console.error("transfer failed: ", e)
 
@@ -16,9 +18,8 @@ const lockup = () => t.methods.transfer(lockupAddress, 1)
         throw e
     });
 
-let i = 0;
-lockup();
+lockup(i);
 const timer = setInterval(() => {
     console.log(`starting transfer ${i}`);
-    lockup()
+    lockup(++i);
 }, INTERVAL);
