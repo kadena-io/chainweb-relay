@@ -78,7 +78,9 @@ const submitPropose = async (logg, proposal) => {
       return false;
     })
     .catch((e) => {
-      if (e.result?.error?.message === 'Already active proposal') {
+      if (e.result?.error?.message === 'Duplicate proposal') {
+        return true;
+      } else if (e.result?.error?.message === 'Already active proposal') {
         return true;
       } else {
         logg.error({error: e}, "local propose failed");
@@ -91,16 +93,20 @@ const submitPropose = async (logg, proposal) => {
   } else {
     logg.info(`submitting proposal`, proposal);
     const result = await tools.relay.propose(bonder.keyPair, config.BOND_NAME, proposal, false)
+      .then(() => logg.info("successes"))
       .catch(e => {
         const msg = e.result?.error?.message;
-        if (msg === 'Already active proposal') {
+        if (e.result?.error?.message === 'Duplicate proposal') {
           logg.warn({warning: msg}, "proposal failed");
+        } else if (msg === 'Already active proposal') {
+          logg.warn({warning: msg}, "proposal failed");
+        } else if (e instanceof tools.TimeoutError) {
+          logg.warn({warning: e}, "failed to confirm that proposal was successful");
         } else {
           throw e;
         }
       });
     logg.debug({result: result});
-    logg.info("successes");
   }
 }
 
@@ -191,6 +197,8 @@ const submitEndorse = async (logg, proposal) => {
           const msg = e.result?.error?.message;
           if (msg === 'Duplicate endorse') {
             logg.warn({warning: msg}, "endorsement failed");
+          } else if (e instanceof tools.TimeoutError) {
+            logg.warn({warning: e}, "failed to confirm that endorsement was successful");
           } else {
             throw e;
           }

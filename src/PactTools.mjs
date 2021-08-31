@@ -1,5 +1,6 @@
 import pact from "pact-lang-api";
 import config from "../Config.mjs";
+import pRetry from 'p-retry';
 
 /* ************************************************************************** */
 /* Utils */
@@ -30,6 +31,35 @@ const pactResult = (resp) => {
   }
 }
 
+const retryOpts = {
+  retries: 4,
+  onFailedAttempt: (err) => { console.warn(err); },
+};
+
+
+class HttpError extends Error {
+  constructor(msg) {
+    super(msg);
+  }
+}
+
+/* Retries only of the result status isn't OK.
+ *
+ * Pact failures are returned with result 200 and do not cause retry.
+ *
+ */
+const retryPact = async (call) => {
+  const run = async () => {
+    const resp = await call();
+    if (typeof resp === 'string') {
+      throw new HttpError(resp);
+    } else {
+      return resp;
+    }
+  }
+  return await pRetry(run, retryOpts);
+}
+
 /**
  * Send pact with an Command Object.
  *
@@ -40,7 +70,7 @@ const pactResult = (resp) => {
  *
  */
 const sendPact = async (cmd) => {
-  const resp = await pact.fetch.send(cmd, config.PACT_URL);
+  const resp = await retryPact(() => pact.fetch.send(cmd, config.PACT_URL));
   const reqKeys = resp.requestKeys;
   if (reqKeys) {
     return reqKeys[0];
@@ -60,7 +90,9 @@ const sendPact = async (cmd) => {
  */
 const localPact = async (cmd) => {
   try {
-    return pactResult(await pact.fetch.local(cmd, config.PACT_URL));
+    return pactResult(
+      await retryPact(() => pact.fetch.local(cmd, config.PACT_URL))
+    );
   } catch (e) {
     throw e;
   }
@@ -91,26 +123,25 @@ const awaitTx = async (reqKey) => {
 }
 
 const pollTxs = async (reqKeys) => {
-  const resp = await pact.fetch.poll(reqKeys, config.PACT_URL);
+  const resp = await retryPact(() => pact.fetch.poll(reqKeys, config.PACT_URL));
   return objMap(resp, v => pactResult(v));
 }
 
-const poll = async (reqKey, apiHost, maxCount=300) => {
-  let repeat = true;
-  let count = 0;
-  while (repeat) {
-    const result = await pact.fetch.poll(reqKey, apiHost)
-    if (result[reqKey.requestKeys[0]]) {
-      return result;
+async function poll (reqBody, apiHost, timeoutMs=300000) {
+  let attempts = 0;
+  let cancel = false;
+  return await timeout(timeoutMs, async (canceled) => {
+    while (! canceled.canceled) {
+      ++attempts;
+      const result = await retryPact(() => pact.fetch.poll(reqBody, apiHost));
+      if (result[reqBody.requestKeys[0]]) {
+        return result;
+      } else {
+        await wait(5000);
+      }
     }
-    await wait();
-    count++;
-    if (count > maxCount) {
-      repeat = false;
-      return result;
-    }
-  }
-  return 'Server unresponsive'
+    console.log(`poll canceled after ${attempts} attempts`);
+  });
 }
 
 async function wait(ms = 1000) {
@@ -118,6 +149,25 @@ async function wait(ms = 1000) {
     setTimeout(resolve, ms);
   });
 }
+
+class TimeoutError extends Error {
+  constructor(msg) {
+    super(msg);
+  }
+}
+
+async function timeout(ms, p) {
+  let canceled = { canceled: false };
+  return Promise.race([
+    new Promise((_resolve, reject) =>
+      wait(ms).then(() => {
+        canceled.canceled = true;
+        reject(new TimeoutError(`Timeout: promise canceled after ${ms}ms`))
+      })
+    ),
+    p(canceled)
+  ]);
+};
 
 /* ************************************************************************** */
 /* Relay Contract Utils */
@@ -363,4 +413,6 @@ export {
   relay,
   capabilities,
   pool,
+  TimeoutError,
+  HttpError,
 }
