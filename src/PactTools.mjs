@@ -129,7 +129,6 @@ const pollTxs = async (reqKeys) => {
 
 async function poll (reqBody, apiHost, timeoutMs=300000) {
   let attempts = 0;
-  let cancel = false;
   return await timeout(timeoutMs, async (canceled) => {
     while (! canceled.canceled) {
       ++attempts;
